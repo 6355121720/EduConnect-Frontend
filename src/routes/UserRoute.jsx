@@ -1,6 +1,7 @@
 import { useSelector } from 'react-redux'
 import { Navigate } from 'react-router-dom'
 import MainLayout from '../layouts/MainLayout';
+import { useEffect } from 'react';
 
 const UserRoute = () => {
 
@@ -10,7 +11,7 @@ const UserRoute = () => {
     return <MainLayout />;
   }
   else{
-    <Navigate to="/unauthorized" replace />
+    return <Navigate to="/unauthorized" replace />
   }
 
 }

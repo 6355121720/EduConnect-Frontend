@@ -29,5 +29,6 @@ export const rejectRequest = async (data) => {
 
 export const getConnections = async () => {
   const res = await apiClient.get("/connection/connections");
+  console.log(res.data);
   return res;
 }

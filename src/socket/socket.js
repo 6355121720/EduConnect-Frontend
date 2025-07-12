@@ -1,32 +1,69 @@
-import SockJS from 'sockjs-client/dist/sockjs';
-import Stomp from 'stompjs';
+import {Client} from '@stomp/stompjs';
+import SockJS from 'sockjs-client';
 
 // Append token as query param
-let socket = null;
 let stompClient = null;
 
 export const connectSocket = () => {
-  if (stompClient && stompClient.connected){
-    stompClient.disconnect();
+  console.log("trying to activate socket.");
+  if (stompClient && stompClient.active){
+    stompClient.deactivate();
   }
 
   let accessToken = localStorage.getItem("accessToken");
 
-  socket = new SockJS(import.meta.env.VITE_BACKEND_URL + "/ws?token=" + accessToken);
-  stompClient = Stomp.over(socket);
+  if (!accessToken) return;
 
-  stompClient.connect({}, (frame) => {
-    console.log("Socket is connected", frame)
+  stompClient = new Client({
+    webSocketFactory: () => new SockJS(import.meta.env.VITE_BACKEND_URL + "/ws?token=" + accessToken),
+    connectHeaders: {
+      "Authorization" : "Bearer " + accessToken,
+    },
+    debug: (str) => {
+      console.log(str);
+    },
+    reconnectDelay: 5000,
+    onConnect: (frame) => {
+      console.log("Websocket connected.", frame);
+    },
+    onStompError: (frame) => {
+      console.log("Websocket error while connecting.", frame);
+    }
+  });
 
+  stompClient.activate();
 
-  }, (error) => {
-    console.log("Error while connecting websocket.", error);
-  })
 
 } 
 
 export const disconnectSocket = () => {
-  if (stompClient && stompClient.connected){
-    stompClient.disconnect();
+  console.log("trying to deactivate socket.");
+  if (stompClient && stompClient.active){
+    console.log("deactivating socket.");
+    stompClient.deactivate();
   }
 }
+
+export const subscribePrivate = (onMessageReceived) => {
+  if (!stompClient || !stompClient.active){
+    console.log("subscribing before stompclient is connected.");
+    return null;
+  }
+
+  return stompClient.subscribe("/user/queue/message", onMessageReceived);
+
+}
+
+export const sendPrivateSocketMessage = (data) => {
+  if (!stompClient || !stompClient.active){
+    console.log("sending before stompclient is connected.");
+    return null;
+  }
+
+  stompClient.publish({
+    destination: "/app/private-chat", 
+    body: JSON.stringify(data)});
+}
+
+
+export {stompClient}

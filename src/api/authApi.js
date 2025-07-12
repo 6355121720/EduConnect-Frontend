@@ -1,5 +1,4 @@
 import apiClient from './apiClient';
-import { logout as logoutState } from '../store/slices/authSlice';
 
 export const checkAvailability = async data => {
   const res = await apiClient.post('auth/check-availability', data);
@@ -21,14 +20,13 @@ export const signUp = async (user, avatar) => {
 };
 
 export const login = async data => {
+  console.log(data)
   const res = await apiClient.post('/auth/login', data);
   return res;
 };
 
 export const logout = async () => {
   await apiClient.post('/auth/logout');
-  localStorage.removeItem('accessToken');
-  logoutState();
 };
 
 export const refreshToken = async () => {

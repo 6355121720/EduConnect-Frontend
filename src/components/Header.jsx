@@ -1,18 +1,21 @@
 import { Link, useNavigate } from 'react-router-dom';
 import { FiMessageSquare, FiUsers, FiCalendar, FiLogOut, FiUser, FiSettings } from 'react-icons/fi';
-import { useSelector } from 'react-redux';
+import { useDispatch, useSelector } from 'react-redux';
 import { logout } from '../api/authApi';
 import { useState } from 'react';
+import { logoutService } from '../services/authService';
 
 export default function Header() {
   const { user: currentUser, isAuthenticated } = useSelector(store => store.auth);
   const [openMenu, setOpenMenu] = useState(false)
   const navigate = useNavigate();
+  const dispatch = useDispatch();
 
   const handleLogout = async () => {
     try {
       await logout();
-      navigate('/login');
+      dispatch(logoutService());
+      navigate('/');
     } catch (error) {
       console.error('Logout failed:', error);
     }

@@ -36,7 +36,7 @@ const MessagePage = () => {
             <p className="text-gray-600 mb-6">
               Join class discussions, study groups, or project teams in collaborative spaces.
             </p>
-            <Link className="bg-blue-600 text-white px-5 py-2 rounded-md hover:bg-blue-700 transition-colors" to="/chat/group">
+            <Link className="bg-blue-600 text-white px-5 py-2 rounded-md hover:bg-blue-700 transition-colors" to="/chat/groups">
             <button>
               Enter Group Chat
             </button>

@@ -12,6 +12,7 @@ import ConnectionsPage from '../features/students/pages/ConnectionsPage';
 import MessagePage from '../features/chat/pages/MessagePage';
 import PersonalChatPage from '../features/chat/pages/PersonalChatPage';
 import GroupChatPage from '../features/chat/pages/GroupChatPage';
+import GroupList from '../features/chat/pages/GroupListPage';
 
 const AppRouter = () => {
   return (
@@ -38,6 +39,7 @@ const AppRouter = () => {
               <Route index element={<MessagePage />} />
               <Route path = "/chat/personal" element={<PersonalChatPage />} />
               <Route path = "/chat/group" element = {<GroupChatPage />} />
+              <Route path = "/chat/groups" element = {<GroupList />} />
             </Route>
           </Route>
 

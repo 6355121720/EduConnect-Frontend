@@ -1,10 +1,9 @@
 // src/features/auth/components/LoginForm.jsx
-import React, { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { isValidEmail, isValidPassword } from '../../../utils/Validator';
-import { login } from '../../../api/authApi';
-import { useDispatch } from 'react-redux';
-import {login as loginSlice} from '../../../store/slices/authSlice'
+import { useDispatch, useSelector } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
+import { loginService } from '../../../services/authService';
 
 const LoginForm = () => {
 
@@ -13,6 +12,11 @@ const LoginForm = () => {
   const [loading, setLoading] = useState(false)
   const dispatch = useDispatch();
   const navigate = useNavigate();
+  const isAuthenticated = useSelector(store => store.auth.isAuthenticated);
+
+  useEffect(() => {
+    if (isAuthenticated) navigate("/");
+  })
 
   const [formData, setFormData] = useState({
     emailOrUsername: '',
@@ -27,21 +31,15 @@ const LoginForm = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setErrorMessage("");
-
-    setLoading(true)
-
     if (!formData.emailOrUsername || !formData.password) {
       setErrorMessage("Fill all the fields.");
-      setLoading(false);
-      return; // 🛑 stop execution
+      return;
     }
-
     if (!isValidPassword(formData.password)) {
       setErrorMessage("Password should be of length 8 to 16 and must contain at least one alphabet, number and special character.");
       setLoading(false);
-      return; // 🛑 stop execution
+      return;
     }
-
     let username;
     let email;
     if (isValidEmail(formData.emailOrUsername)) {
@@ -50,14 +48,14 @@ const LoginForm = () => {
       username = formData.emailOrUsername;
     }
 
+    setLoading(true)
 
     try {
-      const res = await login({ email, username, password: formData.password })
-
+      const res = await dispatch(loginService({ email, username, password: formData.password }));
+      console.log(res);
       if (res.status === 200) {
         console.log(res.data);
         localStorage.setItem("accessToken", res.data.accessToken);
-        dispatch(loginSlice(res.data.user));
         navigate('/');
         return;
       } else {
@@ -66,15 +64,12 @@ const LoginForm = () => {
       }
     } catch (err) {
       console.error("Login error:", err);
-      console.log("hey")
       setErrorMessage("Something went wrong. Please try again.");
       setFormData({ emailOrUsername: '', password: '' });
     } finally{
       setLoading(false);
-      console.log(localStorage.getItem("accessToken"));
     }
   };
-
 
   return (
     <form onSubmit={handleSubmit}>
