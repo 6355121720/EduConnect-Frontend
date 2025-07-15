@@ -4,8 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { chatUsers, searchByUsername } from '../../../api/userApi';
 import { useSelector } from 'react-redux';
 import { getChat, getFileUrl, sendPrivateMessage } from '../../../api/chatApi';
-import { sendPrivateSocketMessage, subscribePrivate } from '../../../socket/socket';
-import socketService from '../../../services/socketService';
+import socketService from '../../../services/SocketService';
 
 const PersonalChatPage = () => {
 
@@ -95,7 +94,7 @@ const PersonalChatPage = () => {
 
     const timeoutId = setTimeout(() => {
       subscription = socketService.subscribePrivate(onMessageReceived);
-    }, 500);
+    }, 1000);
 
     return () => {
       clearTimeout(timeoutId); // cleanup the timeout in case component unmounts before 500ms

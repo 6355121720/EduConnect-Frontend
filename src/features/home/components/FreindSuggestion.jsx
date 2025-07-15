@@ -115,7 +115,7 @@ const FreindSuggestion = () => {
             friends.map((item, index) => (
                 <div key={index} className="bg-gray-900 rounded-xl border border-gray-400 flex-col items-center flex gap-3 md:gap-5 sm:text-sm md:text-[1rem] text-center p-5 md:p-7 min-w-32 md:min-w-48 lg:min-w-60">
                   <NavLink to={"/profile?username=" + item.user.username} className = "flex items-center justify-center">
-                    <img src={item.user.avatar} alt={item.user.fullName} className="cursor-pointer rounded-full border-gray-500 border w-[70%]" />
+                    <img src={item.user.avatar} alt={item.user.fullName} className="cursor-pointer rounded-full border-gray-500 border max-w-20" />
                   </NavLink>
                   <div className="">{item.user.fullName}</div>
                   <div className="text-gray-300">{item.university}</div>

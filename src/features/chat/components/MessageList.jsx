@@ -1,7 +1,7 @@
 // components/MessageList.jsx
 import { useEffect, useRef } from 'react';
 
-const MessageList = (messages) => {
+const MessageList = ({messages}) => {
   
   const messagesEndRef = useRef(null);
 
@@ -10,17 +10,18 @@ const MessageList = (messages) => {
   }, [messages]);
 
   return (
-    <div className="flex-1 overflow-y-auto p-4 space-y-4">
-      {messages.map(message => (
-        <div key={message.id} className="flex items-start gap-3">
+    <div className="h-[70vh] overflow-y-auto p-4 space-y-4">
+      {
+        messages.map((message, index) => (
+        <div key={index} className="flex items-start gap-3">
           <div className="bg-gray-700 rounded-full w-10 h-10 flex items-center justify-center">
-            {message.sender.name.charAt(0)}
+            {message.sender.fullName.charAt(0)}
           </div>
           <div className="flex-1">
             <div className="flex items-center gap-2">
-              <span className="font-medium">{message.sender.name}</span>
+              <span className="font-medium">{message.sender.fullName}</span>
               <span className="text-gray-400 text-xs">
-                {message.timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                {message.timestamp}
               </span>
             </div>
             {message.mediaType === 'TEXT' ? (

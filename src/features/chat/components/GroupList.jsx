@@ -1,30 +1,70 @@
 // components/GroupList.jsx
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { getGroup } from '../../../api/chatApi';
+import { myGroups } from '../../../api/chatApi';
+import {searchGroup} from '../../../api/chatApi'
 
-const GroupList = ({ searchTerm }) => {
+const GroupList = ({ searchTerm, groups, setGroups }) => {
   
-  const [groups, setGroups] = useState([]);
+  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     const fun = async () => {
+      setLoading(true);
       if (searchTerm === ""){
-        await getGroup();
+        try{
+          const res = await myGroups();
+          if (res.status === 200){
+            console.log(res.data);
+            setGroups(res.data);
+          }
+          else{
+            console.log("error while fetching groups.");
+          }
+        }
+        catch(e){
+          console.log("error while fetching groups.", e);
+        }
+        finally{
+          setLoading(false);
+        }
       }
-      await searchGroup
-  }
+      else{
+        try{
+          const res = await searchGroup(searchTerm);
+          if (res.status === 200){
+            setGroups(res.data);
+          }
+          else{
+            console.log("error while searching groups.");
+          }
+        }
+        catch(e){
+          console.log("error while searching groups.", e);
+        }
+        finally{
+          setLoading(false);
+        }
+      }
+    }
+
+    const timeout = setTimeout(() => {
+      fun();
+    }, 1500)
+
+    return (() => {
+      clearTimeout(timeout);
+    })
+
   }, [searchTerm])
 
-  const filteredGroups = groups.filter(group => 
-    group.name.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  if (loading) return <div>Loading...</div>
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-      {filteredGroups.map(group => (
+      {groups.map(group => (
         <Link 
-          to={`/groups/${group.id}`} 
+          to={`/chat/group?name=${group.name}`}
           key={group.id}
           className="bg-gray-800 hover:bg-gray-700 rounded-lg p-4 transition-colors"
         >
@@ -37,7 +77,7 @@ const GroupList = ({ searchTerm }) => {
             )}
           </div>
           <p className="text-gray-400 text-sm mt-2">
-            {group.memberCount} members
+            {group.members?.length + 1} members
           </p>
         </Link>
       ))}

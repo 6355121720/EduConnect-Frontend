@@ -1,5 +1,7 @@
 // components/SearchBar.jsx
 const SearchBar = ({ value, onChange, placeholder }) => {
+
+
   return (
     <div className="relative flex-1 max-w-md">
       <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">

@@ -1,22 +1,75 @@
 // components/MessageInput.jsx
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import { PaperClipIcon, PaperAirplaneIcon } from '@heroicons/react/24/outline';
+import {getFileUrl, sendGroupMessage} from '../../../api/chatApi';
+import SocketService from '../../../services/SocketService';
+import { Loader2 } from 'lucide-react';
 
 const MessageInput = ({ group, currentUser, setMessages }) => {
   const [message, setMessage] = useState('');
   const [file, setFile] = useState(null);
+  const [loading, setLoading] = useState(false);
+  const fileInputRef = useRef(null);
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    
-    setMessage('');
-    setFile(null);
+    setLoading(true);
+
+    try{
+      const tempMessage = {};
+
+      tempMessage.name = group.name;
+      tempMessage.sender = currentUser;
+      tempMessage.timestamp = new Date().toISOString();
+
+      if (file){
+        const res = await getFileUrl(file);
+        if (res.status !== 200){
+          console.log("error while sending message.", res.statusText);
+          return;
+        }
+        tempMessage.mediaType = "FILE";
+        tempMessage.fileUrl = res.data;
+        tempMessage.fileName = message;
+        tempMessage.content = "";
+      }
+      else{
+        tempMessage.mediaType = "TEXT";
+        tempMessage.fileUrl = "";
+        tempMessage.fileName = "";
+        tempMessage.content = message;
+      }
+
+      console.log('message ', tempMessage);
+
+      const res = await sendGroupMessage(tempMessage);
+      if (res.status !== 200){
+        console.log("error while storing message.");
+        return;
+      }
+      console.log(res.data);
+      SocketService.sendGroupMessage(tempMessage);
+      setMessages(prev => [...prev, res.data]);
+      setFile(null);
+      setMessage("");
+      if (fileInputRef.current){
+        fileInputRef.current.value = null;
+      }
+
+    }
+    catch(e){
+      console.log("error while sending message.", e);
+    }
+    finally{
+      setLoading(false);
+    }
   };
 
   const handleFileChange = (e) => {
     const selectedFile = e.target.files[0];
     if (selectedFile) {
       setFile(selectedFile);
+      setMessage(selectedFile.name);
     }
   };
 
@@ -31,16 +84,16 @@ const MessageInput = ({ group, currentUser, setMessages }) => {
           className="w-full bg-gray-700 rounded-lg py-2 px-4 pr-12 focus:outline-none focus:ring-2 focus:ring-blue-500"
         />
         <label className="absolute right-3 top-2.5 cursor-pointer">
-          <input type="file" className="hidden" onChange={handleFileChange} />
+          <input ref={fileInputRef} type="file" className="hidden" onChange={handleFileChange} />
           <PaperClipIcon className="w-5 h-5 text-gray-400 hover:text-white" />
         </label>
       </div>
       <button
         type="submit"
-        disabled={!message && !file}
+        disabled={(!message && !file) || loading}
         className="bg-blue-600 hover:bg-blue-500 disabled:bg-gray-600 disabled:cursor-not-allowed rounded-lg p-2"
       >
-        <PaperAirplaneIcon className="w-5 h-5" />
+        {loading ? <Loader2 /> : <PaperAirplaneIcon className="w-5 h-5" />}
       </button>
     </form>
   );

@@ -13,6 +13,8 @@ import MessagePage from '../features/chat/pages/MessagePage';
 import PersonalChatPage from '../features/chat/pages/PersonalChatPage';
 import GroupChatPage from '../features/chat/pages/GroupChatPage';
 import GroupList from '../features/chat/pages/GroupListPage';
+import QConnectPage from '../features/qconnect/pages/QConnectPage';
+import Question from '../features/qconnect/pages/Question';
 
 const AppRouter = () => {
   return (
@@ -40,6 +42,10 @@ const AppRouter = () => {
               <Route path = "/chat/personal" element={<PersonalChatPage />} />
               <Route path = "/chat/group" element = {<GroupChatPage />} />
               <Route path = "/chat/groups" element = {<GroupList />} />
+            </Route>
+            <Route path="/qconnect" element={<Outlet />}>
+              <Route index element={<QConnectPage />} />
+              <Route path="/qconnect/question/:id" element={<Question />} />
             </Route>
           </Route>
 

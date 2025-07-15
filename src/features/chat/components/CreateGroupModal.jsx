@@ -1,9 +1,9 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { useSelector } from "react-redux";
 import { createGroup } from "../../../api/chatApi";
 
 // CreateGroupModal.jsx
-const CreateGroupModal = ({ onClose }) => {
+const CreateGroupModal = ({ onClose, setGroups }) => {
   const [form, setForm] = useState({
     name: "",
     isPrivate: false,
@@ -12,10 +12,6 @@ const CreateGroupModal = ({ onClose }) => {
   const connections = useSelector(store => store.connection.connections);
   const [errorMessage, setErrorMessage] = useState("");
   const [loading, setLoading] = useState(false);
-
-  useEffect(() => {
-    console.log(connections);
-  }, [])
 
   const handleChange = (e) => {
     setForm({...form, [e.target.name]:e.target.value});
@@ -41,10 +37,12 @@ const CreateGroupModal = ({ onClose }) => {
     try{
       const res = await createGroup(form);
       if (res.status === 200){
+        console.log(res.data);
+        setGroups(prev => [...prev, res.data])
         onClose();
       }
       else{
-        console.log("error while creating group.");
+        console.log("error while creating group.", res);
         setErrorMessage(res.statusText);
       }
     }
@@ -87,7 +85,9 @@ const CreateGroupModal = ({ onClose }) => {
               id="private"
               name="isPrivate"
               checked={form.isPrivate}
-              onChange={(e) => handleChange(e)}
+              onChange={(e) => {
+                setForm(prev => {return {...prev, isPrivate: e.target.checked}});
+              }}
               className="mr-2"
             />
             <label htmlFor="private" className="text-gray-300">

@@ -30,7 +30,7 @@ export default function SearchList({ searchQuery, filters }) {
           course: filters.course === "all" ? null : filters.course,
           skills: filters.skills,
           page: page,
-          size: 5,
+          size: 2,
         });
 
         if (res.status === 200) {
@@ -61,7 +61,7 @@ export default function SearchList({ searchQuery, filters }) {
   // Infinite scroll observer
   useEffect(() => {
     const observer = new IntersectionObserver(entries => {
-      if (entries[0].isIntersecting && hasMore) {
+      if (entries[0].isIntersecting && hasMore && students.length !== 0) {
         setPage(prev => prev + 1);
       }
     }, {
@@ -75,7 +75,7 @@ export default function SearchList({ searchQuery, filters }) {
     return () => {
       if (current) observer.unobserve(current);
     };
-  }, [hasMore]);
+  }, [hasMore, students]);
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">

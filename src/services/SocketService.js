@@ -69,6 +69,7 @@ class SocketService{
       return null;
     }
 
+    console.log("publishing message", data);
     this.socket.publish({
       destination: "/app/group-chat",
       body: JSON.stringify(data)
@@ -76,7 +77,12 @@ class SocketService{
   }
 
   subscribeGroupMessage(groupName, onMessageReceived){
-    this.socket.subscribe("/topic/group/"+groupName, onMessageReceived);
+    if (!this.socket || !this.socket.active){
+      console.log("subscribing before stompclient is connected.");
+      return null;
+    }
+
+    return this.socket.subscribe("/topic/group/"+groupName, onMessageReceived);
   }
 
   getSocket(){

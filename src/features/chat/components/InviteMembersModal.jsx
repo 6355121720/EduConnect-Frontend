@@ -1,13 +1,36 @@
-// InviteMembersModal.jsx
-const InviteMembersModal = ({ groupId, onClose }) => {
-  const [selectedUsers, setSelectedUsers] = useState([]);
-  const [message, setMessage] = useState('');
+import { useState } from "react";
+import { useSelector } from "react-redux";
+import { bulkGroupInvites } from "../../../api/chatApi";
 
-  const handleSubmit = (e) => {
+// InviteMembersModal.jsx
+const InviteMembersModal = ({ group, onClose }) => {
+  const [selectedUsers, setSelectedUsers] = useState([]);
+  const connections = useSelector(store => store.connection.connections);
+
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    // API call to send invitations
+    try{
+      const res = await bulkGroupInvites({groupName: group.name, usernames: selectedUsers});
+      if (res.status !== 200){
+        console.log("error while inviting.");
+      }
+      else{
+        setSelectedUsers([]);
+      }
+    }catch (e){
+      console.log("error while inviting.", e);
+    }
     onClose();
   };
+
+  const handleToggle = (connection) => {
+    if (selectedUsers.includes(connection)){
+      setSelectedUsers(selectedUsers.filter(user => user !== connection));
+    }
+    else{
+      setSelectedUsers([...selectedUsers, connection]);
+    }
+  }
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
@@ -20,27 +43,18 @@ const InviteMembersModal = ({ groupId, onClose }) => {
         </div>
         
         <form onSubmit={handleSubmit}>
-          <div className="mb-4">
-            <label className="block text-gray-300 mb-2">Select Friends</label>
-            <div className="bg-gray-700 rounded p-3 h-40 overflow-y-auto">
-              {/* Map through friends list */}
-              <div className="flex items-center mb-2">
-                <input type="checkbox" id="invite-user1" className="mr-2" />
-                <label htmlFor="invite-user1" className="text-gray-300">Friend 1</label>
+          <div className="grid grid-cols-2 gap-2 max-h-40 overflow-y-auto border p-2 rounded">
+                {connections.map(connection => (
+                  <label key={connection.id} className="flex items-center gap-2">
+                    <input
+                      type="checkbox"
+                      checked={selectedUsers.includes(connection.username)}
+                      onChange={() => handleToggle(connection.username)}
+                    />
+                    {connection.fullName}
+                  </label>
+                ))}
               </div>
-            </div>
-          </div>
-          
-          <div className="mb-4">
-            <label className="block text-gray-300 mb-2">Invitation Message</label>
-            <textarea
-              value={message}
-              onChange={(e) => setMessage(e.target.value)}
-              className="w-full bg-gray-700 rounded px-3 py-2 text-white"
-              rows="3"
-              placeholder="Optional message..."
-            />
-          </div>
           
           <div className="flex justify-end">
             <button

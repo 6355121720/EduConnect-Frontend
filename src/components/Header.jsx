@@ -4,6 +4,11 @@ import { useDispatch, useSelector } from 'react-redux';
 import { logout } from '../api/authApi';
 import { useState } from 'react';
 import { logoutService } from '../services/authService';
+import { QuestionCircleOutlined, QuestionCircleTwoTone } from '@ant-design/icons';
+import { FcAnswers } from 'react-icons/fc';
+import { SiAnswer } from 'react-icons/si';
+import { HiOutlineChatAlt2 } from 'react-icons/hi';
+import { FaQuestionCircle } from 'react-icons/fa';
 
 export default function Header() {
   const { user: currentUser, isAuthenticated } = useSelector(store => store.auth);
@@ -40,6 +45,9 @@ export default function Header() {
             </Link>
             <Link to="/chat" className="text-gray-300 hover:text-white flex items-center gap-1">
               <FiMessageSquare /> <span>Messages</span>
+            </Link>
+            <Link to="/qconnect" className="text-gray-300 hover:text-white flex items-center gap-1">
+              <QuestionCircleOutlined  /> <span>QConnect</span>
             </Link>
           </nav>
         )}
