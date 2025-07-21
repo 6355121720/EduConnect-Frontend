@@ -32,7 +32,20 @@ const AppContent = () => {
     init();
   });
 
-  if (loading) return <div className="text-center py-10">Loading...</div>;
+  if (loading) return (
+    <div className="min-h-screen bg-gradient-to-br from-gray-900 via-black to-gray-900 flex items-center justify-center">
+      <div className="text-center">
+        <div className="loading-dots mb-4">
+          <div></div>
+          <div></div>
+          <div></div>
+          <div></div>
+        </div>
+        <h2 className="text-2xl font-bold text-white mb-2">EduConnect</h2>
+        <p className="text-gray-400">Loading your premium experience...</p>
+      </div>
+    </div>
+  );
 
   return <AppRouter />;
 };

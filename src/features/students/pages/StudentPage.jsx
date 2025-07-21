@@ -1,56 +1,3 @@
-// import { useState } from 'react';
-// import StudentSearch from '../components/StudentSearch';
-// import StudentFilters from '../components/StudentFilters';
-// import ConnectionsList from '../components/SearchList';
-// import ConnectionRequests from '../components/ConnectionRequests';
-
-// export default function StudentsPage() {
-//   const [searchQuery, setSearchQuery] = useState('');
-//   const [filters, setFilters] = useState({
-//     university: null,
-//     course: null,
-//     skills: [],
-//   });
-
-//   return (
-//     <div className="bg-gray-900 min-h-screen p-6 overflow-x-hidden">
-//       {/* Header */}
-//       <div className="mb-8">
-//         <h1 className="text-2xl font-bold text-white">Connect with Students</h1>
-//         <p className="text-gray-400">Find and network with peers</p>
-//       </div>
-
-//       {/* Search + Filters Row */}
-//       <div className="grid grid-cols-1 lg:grid-cols-4 gap-6 mb-8">
-//         {/* Connection Requests Sidebar */}
-//         <div className="lg:col-span-1">
-//           <ConnectionRequests />
-//         </div>
-
-//         <div className="lg:col-span-3">
-//           <StudentSearch 
-//             value={searchQuery}
-//             onChange={setSearchQuery}
-//           />
-//           <StudentFilters 
-//             filters={filters}
-//             onFilterChange={setFilters}
-//           />
-//         </div>
-        
-//       </div>
-
-//       {/* Results Grid */}
-//       <ConnectionsList 
-//         searchQuery={searchQuery}
-//         filters={filters}
-//       />
-//     </div>
-//   );
-// }
-
-
-
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import StudentSearch from '../components/StudentSearch';
@@ -61,8 +8,8 @@ import ConnectionRequests from '../components/ConnectionRequests';
 export default function StudentsPage() {
   const [searchQuery, setSearchQuery] = useState('');
   const [filters, setFilters] = useState({
-    university: null,
-    course: null,
+    university: "all",
+    course: "all",
     skills: [],
   });
 
@@ -86,11 +33,11 @@ export default function StudentsPage() {
       </div>
 
       {/* Rest of the code remains the same */}
-      <div className="grid grid-cols-1 lg:grid-cols-4 gap-6 mb-8">
-        <div className="lg:col-span-1">
+      <div className="grid grid-cols-1 gap-6 mb-8">
+        {/* <div className="col-span-1"> */}
           <ConnectionRequests />
-        </div>
-        <div className="lg:col-span-3">
+        {/* </div> */}
+        <div className="col-span-3">
           <StudentSearch 
             value={searchQuery}
             onChange={setSearchQuery}

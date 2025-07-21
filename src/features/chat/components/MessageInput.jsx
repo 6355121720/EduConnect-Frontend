@@ -1,9 +1,11 @@
 // components/MessageInput.jsx
 import { useRef, useState } from 'react';
-import { PaperClipIcon, PaperAirplaneIcon } from '@heroicons/react/24/outline';
+// import { PaperClipIcon, PaperAirplaneIcon } from '@heroicons/react/24/outline';
 import {getFileUrl, sendGroupMessage} from '../../../api/chatApi';
 import SocketService from '../../../services/SocketService';
-import { Loader2 } from 'lucide-react';
+import { Loader2, Paperclip, PaperclipIcon, Send } from 'lucide-react';
+import { PaperClipOutlined } from '@ant-design/icons';
+import { BiPaperPlane } from 'react-icons/bi';
 
 const MessageInput = ({ group, currentUser, setMessages }) => {
   const [message, setMessage] = useState('');
@@ -85,7 +87,8 @@ const MessageInput = ({ group, currentUser, setMessages }) => {
         />
         <label className="absolute right-3 top-2.5 cursor-pointer">
           <input ref={fileInputRef} type="file" className="hidden" onChange={handleFileChange} />
-          <PaperClipIcon className="w-5 h-5 text-gray-400 hover:text-white" />
+          {/* <PaperClipIcon className="w-5 h-5 text-gray-400 hover:text-white" /> */}
+          <PaperclipIcon />
         </label>
       </div>
       <button
@@ -93,10 +96,37 @@ const MessageInput = ({ group, currentUser, setMessages }) => {
         disabled={(!message && !file) || loading}
         className="bg-blue-600 hover:bg-blue-500 disabled:bg-gray-600 disabled:cursor-not-allowed rounded-lg p-2"
       >
-        {loading ? <Loader2 /> : <PaperAirplaneIcon className="w-5 h-5" />}
+        {loading ? <Loader2 /> : <BiPaperPlane className="w-5 h-5" />}
       </button>
     </form>
   );
+  // return (
+  //   <form onSubmit={handleSubmit} className="flex gap-3">
+  //     <div className="flex-1 relative">
+  //       <input
+  //         type="text"
+  //         value={message}
+  //         onChange={(e) => setMessage(e.target.value)}
+  //         placeholder="Type a message..."
+  //         className="w-full bg-gray-800 rounded-xl py-3 px-4 pr-12 focus:outline-none focus:ring-2 focus:ring-blue-500 border border-gray-700 text-white"
+  //       />
+  //       <label className="absolute right-3 top-3 cursor-pointer">
+  //         <input ref={fileInputRef} type="file" className="hidden" onChange={handleFileChange} />
+  //         <Paperclip className="w-5 h-5 text-gray-400 hover:text-white transition-colors" />
+  //       </label>
+  //     </div>
+  //     <button
+  //       type="submit"
+  //       disabled={(!message && !file) || loading}
+  //       className="bg-blue-600 hover:bg-blue-500 disabled:bg-gray-700 disabled:cursor-not-allowed rounded-xl p-3 transition-colors"
+  //     >
+  //       {loading ? 
+  //         <Loader2 className="animate-spin h-5 w-5 text-white" /> : 
+  //         <Send className="w-5 h-5 text-white" />
+  //       }
+  //     </button>
+  //   </form>
+  // );
 };
 
 export default MessageInput;
