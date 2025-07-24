@@ -8,4 +8,8 @@ export default defineConfig({
   define: {
     global: 'window', // ⬅️ This is the key fix
   },
+  server: {
+    host: true, // This exposes to your IP (0.0.0.0)
+    port: 5173,
+  },
 });

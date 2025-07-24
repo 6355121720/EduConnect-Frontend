@@ -72,38 +72,54 @@ const LoginForm = () => {
   };
 
   return (
-    <form onSubmit={handleSubmit}>
-      <fieldset disabled={loading} className="space-y-4 ">
-        <input
-          type="text"
-          name="emailOrUsername"
-          placeholder="Email or Username"
-          value={formData.emailOrUsername}
-          onChange={handleChange}
-          className="w-full p-2 border rounded placeholder:text-gray-400"
-        />
-        <input
-          type="password"
-          name="password"
-          placeholder="Password"
-          value={formData.password}
-          onChange={handleChange}
-          className="w-full p-2 border rounded placeholder:text-gray-400"
-        />
+    <form onSubmit={handleSubmit} className="space-y-6">
+      <fieldset disabled={loading} className="space-y-6">
+        <div className="space-y-4">
+          <div className="relative">
+            <input
+              type="text"
+              name="emailOrUsername"
+              placeholder="Email or Username"
+              value={formData.emailOrUsername}
+              onChange={handleChange}
+              className="input-premium"
+            />
+          </div>
+          
+          <div className="relative">
+            <input
+              type="password"
+              name="password"
+              placeholder="Password"
+              value={formData.password}
+              onChange={handleChange}
+              className="input-premium"
+            />
+          </div>
+        </div>
+
         <button
           type="submit"
-          className="w-full bg-blue-600 text-white py-2 rounded"
+          className="btn-premium w-full py-4 text-lg font-semibold"
+          disabled={loading}
         >
-          {loading ? 'Loading...' : 'Login'}
+          {loading ? (
+            <div className="flex items-center justify-center gap-2">
+              <div className="w-5 h-5 border-2 border-black/30 border-t-black rounded-full animate-spin"></div>
+              Signing In...
+            </div>
+          ) : (
+            'Sign In'
+          )}
         </button>
-        <p
-          id="form-message"
-          className={`text-red-500 text-sm transition-opacity duration-200 ${
-            errorMessage ? 'opacity-100' : 'opacity-0'
-          }`}
-        >
-          {errorMessage}
-        </p>
+
+        {errorMessage && (
+          <div className="p-4 bg-red-500/10 border border-red-500/30 rounded-xl">
+            <p className="text-red-400 text-sm font-medium text-center">
+              {errorMessage}
+            </p>
+          </div>
+        )}
       </fieldset>
     </form>
   );
