@@ -17,6 +17,8 @@ import QuestionPage from '../features/qconnect/pages/QuestionPage';
 import QConnectPage from '../features/qconnect/pages/QConnectPage';
 import PostQuestion from '../features/qconnect/pages/PostQuestion';
 import MyQuestionPage from '../features/qconnect/pages/MyQuestions';
+import EventsPage from '../features/events/pages/EventsPageNew';
+import MyRegistrationsPage from '../features/events/pages/MyRegistrationsPage';
 
 const AppRouter = () => {
   return (
@@ -51,9 +53,13 @@ const AppRouter = () => {
               <Route path="/qconnect/post" element={<PostQuestion />} />
               <Route path="/qconnect/myquestion" element={<MyQuestionPage />} /> 
             </Route>
+            <Route path="/events" element={<Outlet />}>
+              <Route index element={<EventsPage />} />
+              <Route path="/events/registrations" element={<MyRegistrationsPage />} />
+            </Route>
+            <Route path="/profile" element={<ProfilePage />} />
           </Route>
 
-          <Route path="/profile" element={<ProfilePage />} />
 
 
         </Routes>

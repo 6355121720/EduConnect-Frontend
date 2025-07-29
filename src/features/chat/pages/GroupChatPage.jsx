@@ -1,5 +1,5 @@
 // GroupChatPage.jsx
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import MessageList from '../components/MessageList';
 import MessageInput from '../components/MessageInput';
@@ -8,6 +8,7 @@ import InviteMembersModal from '../components/InviteMembersModal';
 import { getGroup, getMessages, isValidGroup, joinGroup, joinRequest, leaveGroup } from '../../../api/chatApi';
 import { useSelector } from 'react-redux';
 import socketService from '../../../services/SocketService';
+import { Lock, Users, Info, Loader } from 'lucide-react';
 
 const GroupChatPage = () => {
   const [searchParams] = useSearchParams();
@@ -26,6 +27,13 @@ const GroupChatPage = () => {
   const [isMember, setIsMember] = useState(false);
   const [isPrivate, setIsPrivate] = useState(false);
   const navigate = useNavigate();
+  const scrollRef = useRef();
+
+  useEffect(() => {
+    setTimeout(() => {
+      scrollRef.current?.scrollIntoView({ behavior: 'smooth' });
+    }, 0)
+  }, [messages])
 
   const onGroupLeave = async () => {
     try{
@@ -136,36 +144,114 @@ const GroupChatPage = () => {
   }
 
 
+  // if (loading){
+  //   return <div className="h-screen flex justify-center items-center text-3xl">Loading...</div>
+  // }
+
+  // if (!isMember){
+  //   if (isPrivate){
+  //     return <button onClick={sendJoinRequest} className="text-3xl h-screen w-screen flex justify-center items-center"><div className = "p-3 rounded-full bg-amber-400 text-black cursor-pointer">Request To Join Group</div></button>    
+  //   }
+  //   return <button onClick={joinPublicGroup} className="text-3xl h-screen w-screen flex justify-center items-center"><div className = "p-3 rounded-full bg-amber-400 text-black cursor-pointer">Join Public Group</div></button>    
+  // }
+
+  // return (
+  //   <div className="dark:bg-gray-900 text-white flex">
+  //     {/* Main chat area */}
+  //     <div className="flex-1 flex flex-col max-w-4xl mx-auto">
+  //       <div className="p-4 border-b border-gray-700 flex justify-between items-center">
+  //         <h2 className="text-xl font-semibold">Group Name</h2>
+  //         <button 
+  //           onClick={() => setShowGroupInfo(!showGroupInfo)}
+  //           className="text-gray-400 hover:text-white"
+  //         >
+  //           <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+  //             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+  //           </svg>
+  //         </button>
+  //       </div>
+        
+  //       <MessageList messages = {messages} /> 
+        
+  //       <div className="p-4 border-t border-gray-700">
+  //         <MessageInput group={group} currentUser = {currentUser} setMessages = {setMessages} />
+  //       </div>
+  //     </div>
+      
+  //     {/* Group info sidebar */}
+  //     {showGroupInfo && (
+  //       <div className="w-80 bg-gray-800 border-l border-gray-700">
+  //         <GroupInfo 
+  //           currentUser={currentUser}
+  //           setGroup={setGroup}
+  //           group = {group}
+  //           onInviteClick={() => setShowInviteModal(true)}
+  //           onClose={() => setShowGroupInfo(false)}
+  //           onGroupLeave = {onGroupLeave}
+  //         />
+  //       </div>
+  //     )}
+      
+  //     {showInviteModal && (
+  //       <InviteMembersModal 
+  //         group={group}
+  //         onClose={() => setShowInviteModal(false)}
+  //       />
+  //     )}
+  //   </div>
+  // );
   if (loading){
-    return <div className="h-screen flex justify-center items-center text-3xl">Loading...</div>
+    return (
+      <div className="h-screen flex justify-center items-center bg-gray-900">
+        <Loader className="animate-spin h-12 w-12 text-blue-500" />
+      </div>
+    )
   }
 
   if (!isMember){
     if (isPrivate){
-      return <button onClick={sendJoinRequest} className="text-3xl h-screen w-screen flex justify-center items-center"><div className = "p-3 rounded-full bg-amber-400 text-black cursor-pointer">Request To Join Group</div></button>    
+      return (
+        <div className="h-screen w-screen flex justify-center items-center bg-gray-900">
+          <button onClick={sendJoinRequest} className="p-5 rounded-2xl bg-gradient-to-r from-amber-500 to-amber-600 text-black font-medium text-xl flex items-center transition-transform hover:scale-105">
+            <Lock className="w-6 h-6 mr-2" />
+            Request To Join Group
+          </button>
+        </div>
+      )
     }
-    return <button onClick={joinPublicGroup} className="text-3xl h-screen w-screen flex justify-center items-center"><div className = "p-3 rounded-full bg-amber-400 text-black cursor-pointer">Join Public Group</div></button>    
+    return (
+      <div className="h-screen w-screen flex justify-center items-center bg-gray-900">
+        <button onClick={joinPublicGroup} className="p-5 rounded-2xl bg-gradient-to-r from-blue-500 to-blue-600 text-white font-medium text-xl flex items-center transition-transform hover:scale-105">
+          <Users className="w-6 h-6 mr-2" />
+          Join Public Group
+        </button>
+      </div>
+    )
   }
 
   return (
-    <div className="dark:bg-gray-900 text-white flex">
+    <div className="bg-gray-900 text-white flex h-screen">
       {/* Main chat area */}
-      <div className="flex-1 flex flex-col max-w-4xl mx-auto">
-        <div className="p-4 border-b border-gray-700 flex justify-between items-center">
-          <h2 className="text-xl font-semibold">Group Name</h2>
+      <div ref={scrollRef} />
+      <div className="flex-1 flex flex-col max-w-4xl mx-auto h-full">
+        <div className="p-5 border-b border-gray-800 flex justify-between items-center bg-gray-800">
+          <div className="flex items-center gap-3">
+            <div className="bg-indigo-900 w-10 h-10 rounded-xl flex items-center justify-center">
+              <Users className="w-5 h-5 text-indigo-400" />
+            </div>
+            <h2 className="text-xl font-semibold">{group.name}</h2>
+          </div>
           <button 
             onClick={() => setShowGroupInfo(!showGroupInfo)}
-            className="text-gray-400 hover:text-white"
+            className="text-gray-400 hover:text-white transition-colors p-2 rounded-full hover:bg-gray-700"
           >
-            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-            </svg>
+            <Info className="w-6 h-6" />
           </button>
         </div>
         
         <MessageList messages = {messages} /> 
         
-        <div className="p-4 border-t border-gray-700">
+        <div className="p-5 border-t border-gray-800 bg-gray-800">
           <MessageInput group={group} currentUser = {currentUser} setMessages = {setMessages} />
         </div>
       </div>
