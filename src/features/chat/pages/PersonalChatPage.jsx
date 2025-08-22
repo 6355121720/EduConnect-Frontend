@@ -165,7 +165,7 @@ const PersonalChatPage = () => {
   };
 
   return (
-    <div className="flex flex-col h-screen bg-gray-900">
+    <div className="flex flex-col h-[89vh] bg-gray-900">
       <header className="bg-gray-800 py-4 px-6 flex justify-between items-center border-b border-gray-700">
         <button 
           className="text-blue-400 hover:text-blue-300 flex items-center transition-colors"

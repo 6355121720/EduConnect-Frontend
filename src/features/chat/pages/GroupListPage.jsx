@@ -3,8 +3,10 @@ import GroupList from '../components/GroupList';
 import CreateGroupModal from '../components/CreateGroupModal';
 import SearchBar from '../components/SearchBar';
 import { getInvites, respondToInvite } from '../../../api/chatApi';
+import { myGroups, searchGroup } from '../../../api/chatApi';
 import { useSelector } from 'react-redux';
-import { Plus, Bell, Check, X } from 'lucide-react';
+import { Plus, Bell, Check, X , ArrowLeft} from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 
 const GroupListPage = () => {
   const [showCreateModal, setShowCreateModal] = useState(false);
@@ -12,10 +14,18 @@ const GroupListPage = () => {
   const [groupInvites, setGroupInvites] = useState([]);
   const currentUser = useSelector(store => store.auth.user);
   const [groups, setGroups] = useState([]);
+  const navigate = useNavigate();
+  const [loading , setLoading] = useState(false);
+  // ensure spinner shows immediately while GroupList performs its fetch
+  // useEffect(() => {
+    // setLoading(true);
+  //   // GroupList will clear loading when its fetch completes
+  // }, []);
   
   useEffect(() => {
     const fetchInvites = async () => {
       try {
+        setLoading(true);
         const res = await getInvites(currentUser);
         if (res.status === 200) {
           setGroupInvites(res.data);
@@ -26,9 +36,47 @@ const GroupListPage = () => {
       } catch (e) {
         console.log("Error while fetching invites.", e);
       }
+      setLoading(false);
     };
     fetchInvites();
   }, [currentUser]);
+
+  // fetch groups (debounced) and control loading here
+  useEffect(() => {
+    let active = true;
+    setLoading(true);
+
+    const fetch = async () => {
+      try {
+        let res;
+        if (!searchTerm || searchTerm.trim() === '') {
+          res = await myGroups();
+        } else {
+          res = await searchGroup(searchTerm.trim());
+        }
+
+        if (!active) return;
+
+        if (res && res.status === 200) {
+          setGroups(res.data);
+        } else {
+          setGroups([]);
+        }
+      } catch (e) {
+        console.log('Error fetching groups', e);
+        setGroups([]);
+      } finally {
+        if (active) setLoading(false);
+      }
+    };
+
+    const id = setTimeout(fetch, 500);
+
+    return () => {
+      active = false;
+      clearTimeout(id);
+    };
+  }, [searchTerm, currentUser]);
 
   const handleRespondToInvite = async (groupName, accept) => {
     try {
@@ -46,8 +94,16 @@ const GroupListPage = () => {
 
   return (
     <div className="bg-gray-900 min-h-screen text-white p-5">
+      
       <div className="max-w-6xl mx-auto">
         <div className="flex justify-between items-center mb-8">
+          <button 
+          className="text-blue-400 hover:text-blue-300 flex items-center transition-colors"
+          onClick={() => navigate('/chat')}
+        >
+          <ArrowLeft className="w-5 h-5 mr-2" />
+          Chat Gateway
+        </button>
           <h1 className="text-2xl font-bold">Group Chats</h1>
           <button 
             onClick={() => setShowCreateModal(true)}
@@ -108,7 +164,8 @@ const GroupListPage = () => {
           </div>
         )}
         
-        <GroupList groups={groups} setGroups={setGroups} searchTerm={searchTerm} />
+        
+        <GroupList groups={groups} loading={loading} />
         
         {showCreateModal && (
           <CreateGroupModal setGroups={setGroups} onClose={() => setShowCreateModal(false)} />

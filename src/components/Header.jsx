@@ -193,14 +193,14 @@ export default function Header() {
                       <FiUser className="text-lg group-hover:scale-110 transition-transform duration-300" /> 
                       <span>View Profile</span>
                     </Link>
-                    <Link 
+                    {/* <Link 
                       to="/settings" 
                       className="group px-4 py-3 text-gray-300 hover:text-yellow-400 hover:bg-gradient-to-r hover:from-yellow-500/10 hover:to-transparent flex items-center gap-3 transition-all duration-300 rounded-lg mx-2"
                       onClick={() => setOpenMenu(false)}
                     >
                       <FiSettings className="text-lg group-hover:rotate-90 transition-transform duration-300" /> 
                       <span>Settings</span>
-                    </Link>
+                    </Link> */}
                   </div>
                   
                   <hr className="border-gray-700/50 my-2 mx-3" />

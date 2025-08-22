@@ -7,16 +7,29 @@ import { X } from "lucide-react";
 const InviteMembersModal = ({ group, onClose }) => {
   const [selectedUsers, setSelectedUsers] = useState([]);
   const connections = useSelector(store => store.connection.connections);
+  const currentUser = useSelector(store => store.auth.user);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     try{
-      const res = await bulkGroupInvites({groupName: group.name, usernames: selectedUsers});
-      if (res.status !== 200){
-        console.log("error while inviting.");
-      }
-      else{
-        setSelectedUsers([]);
+      // filter out users who are already members or admin
+      const alreadyMemberSet = new Set([
+        ...(group.members || []).map(m => m.username),
+        group.admin?.username,
+      ].filter(Boolean));
+
+      const toInvite = selectedUsers.filter(u => !alreadyMemberSet.has(u));
+
+      if (toInvite.length === 0) {
+        console.log('No new users to invite.');
+      } else {
+        const res = await bulkGroupInvites({groupName: group.name, usernames: toInvite});
+        if (res.status !== 200){
+          console.log("error while inviting.");
+        }
+        else{
+          setSelectedUsers([]);
+        }
       }
     }catch (e){
       console.log("error while inviting.", e);
@@ -25,11 +38,16 @@ const InviteMembersModal = ({ group, onClose }) => {
   };
 
   const handleToggle = (connection) => {
-    if (selectedUsers.includes(connection)){
-      setSelectedUsers(selectedUsers.filter(user => user !== connection));
+    const username = connection.username;
+    // prevent toggling if already a member
+    const isMember = (group.admin?.username === username) || (group.members || []).some(m => m.username === username);
+    if (isMember) return;
+
+    if (selectedUsers.includes(username)){
+      setSelectedUsers(selectedUsers.filter(user => user !== username));
     }
     else{
-      setSelectedUsers([...selectedUsers, connection]);
+      setSelectedUsers([...selectedUsers, username]);
     }
   }
 
@@ -93,20 +111,30 @@ const InviteMembersModal = ({ group, onClose }) => {
           <div className="mb-6">
             <label className="block text-gray-300 mb-3 font-medium">Select Connections</label>
             <div className="bg-gray-800 p-3 rounded-xl border border-gray-700 max-h-52 overflow-y-auto custom-scrollbar">
-              {connections.map(connection => (
+              {connections.map(connection => {
+                const username = connection.username;
+                const isMember = (group.admin?.username === username) || (group.members || []).some(m => m.username === username);
+                const disabled = isMember || (group.isPrivate && currentUser?.id !== group.admin?.id);
+                return (
                 <div 
                   key={connection.id} 
-                  className="flex items-center gap-3 py-2 px-3 hover:bg-gray-700 rounded-lg transition-colors"
+                  className={`flex items-center gap-3 py-2 px-3 rounded-lg transition-colors ${disabled ? 'opacity-60 cursor-not-allowed' : 'hover:bg-gray-700'}`}
                 >
                   <input
                     type="checkbox"
                     checked={selectedUsers.includes(connection.username)}
-                    onChange={() => handleToggle(connection.username)}
+                    onChange={() => handleToggle(connection)}
+                    disabled={disabled}
                     className="w-5 h-5 text-blue-600 bg-gray-700 border-gray-600 rounded focus:ring-blue-600"
                   />
-                  <span className="text-gray-200">{connection.fullName}</span>
+                  <div className="flex-1">
+                    <span className="text-gray-200">{connection.fullName}</span>
+                    {isMember && <span className="ml-2 text-xs text-gray-400">• Member</span>}
+                    {(!isMember && group.isPrivate && currentUser?.id !== group.admin?.id) && <span className="ml-2 text-xs text-amber-400">• Only admin can invite</span>}
+                  </div>
                 </div>
-              ))}
+                )
+              })}
             </div>
           </div>
           

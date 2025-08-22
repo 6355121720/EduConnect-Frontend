@@ -8,7 +8,7 @@ import InviteMembersModal from '../components/InviteMembersModal';
 import { getGroup, getMessages, isValidGroup, joinGroup, joinRequest, leaveGroup } from '../../../api/chatApi';
 import { useSelector } from 'react-redux';
 import socketService from '../../../services/SocketService';
-import { Lock, Users, Info, Loader } from 'lucide-react';
+import { Lock, Users, Info, Loader, ArrowLeft, Search } from 'lucide-react';
 
 const GroupChatPage = () => {
   const [searchParams] = useSearchParams();
@@ -174,17 +174,30 @@ const GroupChatPage = () => {
   }
 
   return (
-    <div className="bg-gray-900 text-white flex h-[88vh]">
-      {/* Main chat area */}
-      <div ref={scrollRef} />
-      <div className="flex-1 flex flex-col max-w-4xl mx-auto h-full">
-        <div className="p-5 border-b border-gray-800 flex justify-between items-center bg-gray-800">
-          <div className="flex items-center gap-3">
-            <div className="bg-indigo-900 w-10 h-10 rounded-xl flex items-center justify-center">
-              <Users className="w-5 h-5 text-indigo-400" />
-            </div>
-            <h2 className="text-xl font-semibold">{group.name}</h2>
-          </div>
+    <div className="flex flex-col h-[89vh] bg-gray-900 text-white">
+      <header className="bg-gray-800 py-4 px-6 flex justify-between items-center border-b border-gray-700">
+        <button 
+          className="text-blue-400 hover:text-blue-300 flex items-center transition-colors"
+          onClick={() => navigate('/chat/groups')}
+        >
+          <ArrowLeft className="w-5 h-5 mr-2" />
+          Groups
+        </button>
+
+        <h2 className="text-xl font-semibold">{group.name ? `Group: ${group.name}` : 'Group Chat'}</h2>
+
+        <div className="flex items-center gap-3">
+          {(
+            (!group.isPrivate && isMember) ||
+            (group.isPrivate && currentUser && group.admin && currentUser.id === group.admin.id)
+          ) && (
+            <button
+              onClick={() => setShowInviteModal(true)}
+              className="px-3 py-2 bg-gray-700 hover:bg-gray-600 rounded-lg text-sm text-white transition-colors"
+            >
+              Invite
+            </button>
+          )}
           <button 
             onClick={() => setShowGroupInfo(!showGroupInfo)}
             className="text-gray-400 hover:text-white transition-colors p-2 rounded-full hover:bg-gray-700"
@@ -192,34 +205,80 @@ const GroupChatPage = () => {
             <Info className="w-6 h-6" />
           </button>
         </div>
-        
-        <MessageList messages = {messages} /> 
-        
-        <div className="p-5 border-t border-gray-800 bg-gray-800">
-          <MessageInput group={group} currentUser = {currentUser} setMessages = {setMessages} />
-        </div>
-      </div>
-      
-      {/* Group info sidebar */}
-      {showGroupInfo && (
-        <div className="w-80 bg-gray-800 border-l border-gray-700">
-          <GroupInfo 
-            currentUser={currentUser}
-            setGroup={setGroup}
-            group = {group}
-            onInviteClick={() => setShowInviteModal(true)}
-            onClose={() => setShowGroupInfo(false)}
-            onGroupLeave = {onGroupLeave}
+      </header>
+
+      <div className="flex flex-1 overflow-hidden">
+        {/* Members sidebar */}
+        <aside className="w-72 bg-gray-800 text-gray-200 border-r border-gray-700 overflow-y-auto">
+          <div className="p-4 border-b border-gray-700 flex gap-3 items-center">
+            <input
+              type="text"
+              placeholder="Search members..."
+              className="w-full px-4 py-2.5 rounded-xl bg-gray-750 border border-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500 text-white"
+            />
+            <button className="bg-gray-700 p-2.5 rounded-xl hover:bg-gray-600 transition-colors">
+              <Search className="w-5 h-5" />
+            </button>
+          </div>
+
+          <ul className="divide-y divide-gray-700">
+            {group.members.map((member) => (
+              <li key={member.id} className={`p-4 hover:bg-gray-750 flex items-center transition-colors`}>
+                <div className="bg-indigo-600 rounded-full w-12 h-12 flex items-center justify-center text-lg font-bold mr-3">
+                  {member.fullName ? member.fullName.charAt(0) : member.username?.charAt(0)}
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="font-medium text-white truncate">{member.fullName || member.username}</p>
+                  <p className="text-sm text-gray-400 truncate">@{member.username}</p>
+                </div>
+              </li>
+            ))}
+          </ul>
+        </aside>
+
+        {/* Chat Area */}
+        <main className="flex-1 flex flex-col bg-gray-850">
+          <div className="p-4 border-b border-gray-700 flex items-center bg-gray-800">
+            <div className="bg-indigo-900 rounded-full w-10 h-10 flex items-center justify-center mr-3">
+              <Users className="w-5 h-5 text-indigo-400" />
+            </div>
+            <h3 className="font-semibold text-white">{group.name}</h3>
+          </div>
+
+          <div className="flex-1 p-4 overflow-y-auto custom-scrollbar">
+            <MessageList messages={messages} />
+            <div ref={scrollRef} />
+          </div>
+
+          <div className="p-4 border-t border-gray-700 flex items-center bg-gray-800">
+            <div className="flex-1">
+              {/* Keep MessageInput component (logic unchanged) */}
+              <MessageInput group={group} currentUser={currentUser} setMessages={setMessages} />
+            </div>
+          </div>
+        </main>
+
+        {/* Right info drawer (kept for parity with existing logic) */}
+        {showGroupInfo && (
+          <div className="w-80 bg-gray-800 border-l border-gray-700">
+            <GroupInfo 
+              currentUser={currentUser}
+              setGroup={setGroup}
+              group={group}
+              onInviteClick={() => setShowInviteModal(true)}
+              onClose={() => setShowGroupInfo(false)}
+              onGroupLeave={onGroupLeave}
+            />
+          </div>
+        )}
+
+        {showInviteModal && (
+          <InviteMembersModal 
+            group={group}
+            onClose={() => setShowInviteModal(false)}
           />
-        </div>
-      )}
-      
-      {showInviteModal && (
-        <InviteMembersModal 
-          group={group}
-          onClose={() => setShowInviteModal(false)}
-        />
-      )}
+        )}
+      </div>
     </div>
   );
 };
