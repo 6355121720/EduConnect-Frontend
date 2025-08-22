@@ -1,5 +1,3 @@
-// src/api/axiosInstance.js
-
 import axios from "axios";
 
 const apiClient = axios.create({

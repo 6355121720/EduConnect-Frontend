@@ -144,62 +144,6 @@ const GroupChatPage = () => {
   }
 
 
-  // if (loading){
-  //   return <div className="h-screen flex justify-center items-center text-3xl">Loading...</div>
-  // }
-
-  // if (!isMember){
-  //   if (isPrivate){
-  //     return <button onClick={sendJoinRequest} className="text-3xl h-screen w-screen flex justify-center items-center"><div className = "p-3 rounded-full bg-amber-400 text-black cursor-pointer">Request To Join Group</div></button>    
-  //   }
-  //   return <button onClick={joinPublicGroup} className="text-3xl h-screen w-screen flex justify-center items-center"><div className = "p-3 rounded-full bg-amber-400 text-black cursor-pointer">Join Public Group</div></button>    
-  // }
-
-  // return (
-  //   <div className="dark:bg-gray-900 text-white flex">
-  //     {/* Main chat area */}
-  //     <div className="flex-1 flex flex-col max-w-4xl mx-auto">
-  //       <div className="p-4 border-b border-gray-700 flex justify-between items-center">
-  //         <h2 className="text-xl font-semibold">Group Name</h2>
-  //         <button 
-  //           onClick={() => setShowGroupInfo(!showGroupInfo)}
-  //           className="text-gray-400 hover:text-white"
-  //         >
-  //           <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-  //             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-  //           </svg>
-  //         </button>
-  //       </div>
-        
-  //       <MessageList messages = {messages} /> 
-        
-  //       <div className="p-4 border-t border-gray-700">
-  //         <MessageInput group={group} currentUser = {currentUser} setMessages = {setMessages} />
-  //       </div>
-  //     </div>
-      
-  //     {/* Group info sidebar */}
-  //     {showGroupInfo && (
-  //       <div className="w-80 bg-gray-800 border-l border-gray-700">
-  //         <GroupInfo 
-  //           currentUser={currentUser}
-  //           setGroup={setGroup}
-  //           group = {group}
-  //           onInviteClick={() => setShowInviteModal(true)}
-  //           onClose={() => setShowGroupInfo(false)}
-  //           onGroupLeave = {onGroupLeave}
-  //         />
-  //       </div>
-  //     )}
-      
-  //     {showInviteModal && (
-  //       <InviteMembersModal 
-  //         group={group}
-  //         onClose={() => setShowInviteModal(false)}
-  //       />
-  //     )}
-  //   </div>
-  // );
   if (loading){
     return (
       <div className="h-screen flex justify-center items-center bg-gray-900">
@@ -230,7 +174,7 @@ const GroupChatPage = () => {
   }
 
   return (
-    <div className="bg-gray-900 text-white flex h-screen">
+    <div className="bg-gray-900 text-white flex h-[88vh]">
       {/* Main chat area */}
       <div ref={scrollRef} />
       <div className="flex-1 flex flex-col max-w-4xl mx-auto h-full">

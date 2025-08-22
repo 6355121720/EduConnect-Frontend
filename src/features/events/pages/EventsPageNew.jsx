@@ -6,7 +6,7 @@ import CreateEventModal from '../components/CreateEventModal';
 const EventsPage = () => {
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
-  const [filterType, setFilterType] = useState('all');
+  const [filterType, setFilterType] = useState('upcoming');
   const [dateRange, setDateRange] = useState({ startDate: '', endDate: '' });
   const [creatorFilter, setCreatorFilter] = useState(null);
   const [showAdvancedSearch, setShowAdvancedSearch] = useState(false);
@@ -97,10 +97,11 @@ const EventsPage = () => {
             onChange={(e) => setFilterType(e.target.value)}
             className="px-4 py-2.5 bg-gray-700 text-white rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-600"
           >
-            <option value="all">All Events</option>
             <option value="upcoming">Upcoming</option>
             <option value="past">Past Events</option>
             <option value="popular">Popular</option>
+            <option value="all">All Events</option>
+            <option value="my-created">My Created</option>
           </select>
           
           <button

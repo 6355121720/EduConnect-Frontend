@@ -1,12 +1,18 @@
 import { FiHeart, FiGithub, FiLinkedin, FiTwitter, FiMail, FiMapPin, FiPhone, FiArrowUp } from 'react-icons/fi';
 import { useState, useEffect } from 'react';
+import { useLocation } from 'react-router-dom';
 
 const Footer = () => {
   const [showScrollTop, setShowScrollTop] = useState(false);
 
+    const location = useLocation();
+
+    
+
   // Show scroll to top button when user scrolls down
   useEffect(() => {
-    const handleScroll = () => {
+    console.log(location.pathname + "................................................"); 
+    const handleScroll = () => {  
       setShowScrollTop(window.scrollY > 500);
     };
     window.addEventListener('scroll', handleScroll);
@@ -33,8 +39,11 @@ const Footer = () => {
     { name: 'Twitter', href: '#', icon: FiTwitter, color: 'hover:text-blue-300' }
   ];
 
-  return (
-    <footer className="relative bg-gradient-to-b from-gray-900 via-black to-gray-950 border-t border-yellow-500/30 mt-auto overflow-hidden">
+
+  
+
+  return ( location.pathname == "/chat/group" ? null :
+    (<footer className="relative bg-gradient-to-b from-gray-900 via-black to-gray-950 border-t border-yellow-500/30 mt-auto overflow-hidden">
       {/* Background pattern */}
       <div className="absolute inset-0 opacity-5">
         <div className="absolute inset-0" style={{
@@ -233,7 +242,7 @@ const Footer = () => {
 
       {/* Bottom accent line */}
       <div className="h-1 bg-gradient-to-r from-transparent via-yellow-500 to-transparent opacity-50"></div>
-    </footer>
+    </footer>)
   );
 };
 
