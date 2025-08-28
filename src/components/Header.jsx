@@ -5,6 +5,8 @@ import { logout } from '../api/authApi';
 import { useState, useEffect } from 'react';
 import { logoutService } from '../services/authService';
 import { QuestionCircleOutlined } from '@ant-design/icons';
+import NotificationBell from "../features/home/components/NotificationBell"
+
 
 export default function Header() {
   const { user: currentUser, isAuthenticated } = useSelector(store => store.auth);
@@ -183,6 +185,7 @@ export default function Header() {
                       </div>
                     </div>
                   </div>
+                  <NotificationBell />
                   
                   <div className="py-2">
                     <Link 

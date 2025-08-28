@@ -64,7 +64,7 @@ export default function ConnectionsPage() {
                   </div>
                 </div>
               </div>
-              <div className="mt-4">
+              {/* <div className="mt-4">
                 <Link 
                   to={`/chat/${user.id}`}
                   className="w-full bg-gray-700 hover:bg-gray-600 text-white py-2 px-3 rounded-md text-sm flex items-center justify-center gap-1"
@@ -74,7 +74,7 @@ export default function ConnectionsPage() {
                   </svg>
                   Message
                 </Link>
-              </div>
+              </div> */}
             </div>
           ))}
         </div>

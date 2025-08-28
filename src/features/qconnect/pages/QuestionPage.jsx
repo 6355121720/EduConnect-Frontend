@@ -393,12 +393,12 @@ const Question = () => {
                           </div>
                         </div>
                         
-                        {answer.updatedAt !== answer.createdAt && (
+                        {/* {answer.updatedAt !== answer.createdAt && (
                           <div className="flex items-center gap-1">
                             <Clock className="h-4 w-4" />
-                            <span>edited {formatRelativeTime(answer.updatedAt)}</span>
+                            {console.log(answer.updatedAt)}
                           </div>
-                        )}
+                        )} */}
                       </div>
                     </div>
                   </div>
