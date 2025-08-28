@@ -1,9 +1,9 @@
 import apiClient from './apiClient';
-
+import axios from 'axios';
 const BASE_URL = '/events';
 
 const eventApi = {
-  getAllEvents: async (page = 0, size = 20, sortBy = 'date', sortDirection = 'asc') => {
+  getAllEvents: async (page = 0, size = 20, sortBy = 'date', sortDirection = 'desc') => {
   return apiClient.get(`${BASE_URL}/`, {
     params: { page, size, sortBy, sortDirection }
   });
@@ -99,6 +99,17 @@ const eventApi = {
   getEventCreator: async (eventId) => {
     return apiClient.get(`${BASE_URL}/creator/${eventId}`);
   },
+
+
+  downloadPdf: (registrationId) => {
+    return axios.get(`${import.meta.env.VITE_BACKEND_URL}/api/pdf/download_ticket?registrationId=${registrationId}`, {
+        responseType: 'blob',
+        headers: {
+            'Accept': 'application/pdf'
+        },
+        withCredentials: true
+    });
+  }
 
   // getEventsCreatedByUser: async (userId) => {
   //   return apiClient.get(`${BASE_URL}/createdBy/${userId}`);

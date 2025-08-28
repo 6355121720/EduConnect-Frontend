@@ -1,5 +1,8 @@
 import React, { useState } from 'react';
 import eventApi from '../../../api/eventApi';
+import { Universities } from "../../../constants/enums";
+import {ChevronDown} from 'lucide-react';
+
 
 const CreateEventModal = ({ show, onClose, onEventCreated }) => {
   const [formData, setFormData] = useState({
@@ -70,17 +73,25 @@ const CreateEventModal = ({ show, onClose, onEventCreated }) => {
               required
             />
           </div>
-
-          <div>
-            <label className="block text-gray-400 mb-2">University</label>
-            <input
-              type="text"
-              name="university"
-              value={formData.university}
-              onChange={handleChange}
-              className="w-full px-3 py-2 bg-gray-700 text-white rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-600"
-              required
-            />
+          <div className="space-y-2">
+            <label className="block text-gray-400">University</label>
+            <div className="relative">
+              <select
+                name="university"
+                value={formData.university}
+                onChange={handleChange}
+                className="w-full appearance-none bg-gray-700 border border-gray-600 focus:border-purple-500 focus:ring-2 focus:ring-purple-500/20 rounded-lg px-4 py-2.5 pr-12 text-white cursor-pointer transition-all duration-300"
+                required
+              >
+                <option value="" className="bg-gray-800 text-gray-400">Select a university</option>
+                {Universities.map((uni) => (
+                  <option key={uni} value={uni} className="bg-gray-800 text-white">{uni}</option>
+                ))}
+              </select>
+              <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none">
+                <ChevronDown className="w-5 h-5 text-gray-400" />
+              </div>
+            </div>  
           </div>
 
           <div>

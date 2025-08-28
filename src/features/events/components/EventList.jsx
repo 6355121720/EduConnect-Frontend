@@ -20,8 +20,7 @@ const EventList = ({ searchQuery, filterType, dateRange, creatorFilter }) => {
     fetchEvents();
     fetchRegisteredEvents();
   }, [page, searchQuery, filterType, dateRange, creatorFilter]);
-
-  // Auto-dismiss success message
+  
   useEffect(() => {
     if (successMessage) {
       const timer = setTimeout(() => setSuccessMessage(null), 4000);
@@ -30,19 +29,27 @@ const EventList = ({ searchQuery, filterType, dateRange, creatorFilter }) => {
   }, [successMessage]);
 
   const handleRegister = async eventId => {
+  try {
+    setRegistering(eventId);
+    setError(null);
+    const data = await eventApi.registerForEvent(eventId);
+    await Promise.all([fetchEvents(), fetchRegisteredEvents()]);
+
     try {
-      setRegistering(eventId);
-      setError(null);
-      await eventApi.registerForEvent(eventId);
-      await Promise.all([fetchEvents(), fetchRegisteredEvents()]);
-      setSuccessMessage('Successfully registered for event!');
-    } catch (error) {
-      console.error('Error registering for event:', error);
-      setError(error.response?.data?.message || 'Failed to register for event');
-    } finally {
-      setRegistering(null);
+      const response = await eventApi.downloadPdf(data.data.id);
+      window.open(URL.createObjectURL(new Blob([response.data], { type: 'application/pdf' })));
+    } catch (pdfError) {
+      console.error('Error downloading PDF:', pdfError);
     }
-  };
+    setSuccessMessage('Successfully registered for event!');
+  } catch (error) {
+    console.error('Error registering for event:', error);
+    setError(error.response?.data?.message || 'Failed to register for event');
+  } finally {
+    setRegistering(null);
+  }
+};
+
 
   const fetchRegisteredEvents = async () => {
     try {
@@ -107,6 +114,9 @@ const EventList = ({ searchQuery, filterType, dateRange, creatorFilter }) => {
           case 'popular':
             response = await eventApi.getPopularEvents();
             break;
+          case 'my-created' :
+              response = await eventApi.getMyCreatedEvents();
+              break;
           default:
             response = await eventApi.getAllEvents(page, 9);
         }
@@ -157,6 +167,21 @@ const EventList = ({ searchQuery, filterType, dateRange, creatorFilter }) => {
     }
   };
 
+  const handleDelete = async (eventId) => {
+    try {
+      setError(null);
+      const confirmed = window.confirm('Are you sure you want to delete this event?');
+      if (confirmed) {
+        await eventApi.deleteEvent(eventId);
+        await fetchEvents();
+        setSuccessMessage('Event deleted successfully!');
+      }
+    } catch (error) {
+      console.error('Error deleting event:', error);
+      setError(error.response?.data?.message || 'Failed to delete event');
+    }
+  };
+
   const isUserRegistered = event => {
     if (!event || !event.id) return false;
     return registeredEvents.some(regEvent => regEvent.eventId === event.id);
@@ -168,17 +193,37 @@ const EventList = ({ searchQuery, filterType, dateRange, creatorFilter }) => {
     today.setHours(0, 0, 0, 0);
     
     if (eventDate < today) {
-      return { status: 'past', label: 'Past Event', color: 'bg-gray-500' };
+      return { 
+        status: 'past', 
+        label: 'Past Event', 
+        color: 'bg-gray-500',
+        isDue: true
+      };
     } else if (eventDate.toDateString() === today.toDateString()) {
-      return { status: 'today', label: 'Today', color: 'bg-orange-500' };
+      return { 
+        status: 'today', 
+        label: 'Today', 
+        color: 'bg-orange-500',
+        isDue: false
+      };
     } else {
       const diffTime = Math.abs(eventDate - today);
       const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
       
       if (diffDays <= 7) {
-        return { status: 'soon', label: `In ${diffDays} day${diffDays > 1 ? 's' : ''}`, color: 'bg-yellow-500' };
+        return { 
+          status: 'soon', 
+          label: `In ${diffDays} day${diffDays > 1 ? 's' : ''}`, 
+          color: 'bg-yellow-500',
+          isDue: false
+        };
       } else {
-        return { status: 'upcoming', label: 'Upcoming', color: 'bg-green-500' };
+        return { 
+          status: 'upcoming', 
+          label: 'Upcoming', 
+          color: 'bg-green-500',
+          isDue: false
+        };
       }
     }
   };
@@ -281,6 +326,17 @@ const EventList = ({ searchQuery, filterType, dateRange, creatorFilter }) => {
                     <span className="bg-purple-600/80 backdrop-blur-sm text-white text-xs px-3 py-1 rounded-full font-medium shadow-lg">
                       {event.university}
                     </span>
+                    {isCurrentUserCreator && (
+                      <button 
+                        onClick={() => handleDelete(event.id)}
+                        className="bg-red-600/80 hover:bg-red-700/80 backdrop-blur-sm text-white text-xs px-3 py-1 rounded-full font-medium shadow-lg transition-all duration-200 hover:shadow-red-500/20 flex items-center gap-1"
+                      >
+                        <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                        </svg>
+                        Delete
+                      </button>
+                    )}
                     <span className={`${eventStatus.color} text-white text-xs px-2 py-1 rounded-full font-medium`}>
                       {eventStatus.label}
                     </span>
@@ -435,16 +491,27 @@ const EventList = ({ searchQuery, filterType, dateRange, creatorFilter }) => {
                   ) : (
                     <button
                       onClick={() => handleRegister(event.id)}
-                      className={`w-full py-3 px-4 rounded-lg font-medium transition-all duration-200 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 ${
-                        registering === event.id
-                          ? 'bg-purple-400 text-white cursor-wait'
+                      className={`w-full py-3 px-4 rounded-lg font-medium transition-all duration-200 shadow-lg ${
+                        eventStatus.isDue
+                          ? 'bg-gray-700/50 text-gray-400 border border-gray-600/50 backdrop-blur-sm cursor-not-allowed'
+                          : registering === event.id
+                          ? 'bg-purple-400 text-white cursor-wait hover:shadow-xl transform hover:-translate-y-0.5'
                           : isFull
-                          ? 'bg-gray-600 text-gray-300 cursor-not-allowed'
-                          : 'bg-gradient-to-r from-purple-600 to-purple-700 text-white hover:from-purple-700 hover:to-purple-800'
+                          ? 'bg-gray-600 text-gray-300 cursor-not-allowed hover:shadow-xl transform hover:-translate-y-0.5'
+                          : 'bg-gradient-to-r from-purple-600 to-purple-700 text-white hover:from-purple-700 hover:to-purple-800 hover:shadow-xl transform hover:-translate-y-0.5'
                       }`}
-                      disabled={isFull || isProcessing}
+                      disabled={isFull || isProcessing || eventStatus.isDue}
                     >
-                      {registering === event.id ? (
+
+                      
+                      {eventStatus.isDue ? (
+                        <>
+                          <svg className="h-4 w-4 inline mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                          </svg>
+                          Event Ended
+                        </>
+                      ) : (registering === event.id ? (
                         <>
                           <svg className="animate-spin h-4 w-4 inline mr-2" fill="none" viewBox="0 0 24 24">
                             <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
@@ -461,12 +528,16 @@ const EventList = ({ searchQuery, filterType, dateRange, creatorFilter }) => {
                         </>
                       ) : (
                         <>
-                          <svg className="h-4 w-4 inline mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-                          </svg>
-                          Register
+                          <button 
+                            // onClick={hendelReg}
+                          > 
+                            <svg className="h-4 w-4 inline mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                            </svg>
+                            Register
+                          </button>
                         </>
-                      )}
+                      ))}
                     </button>
                   )}
                 </div>

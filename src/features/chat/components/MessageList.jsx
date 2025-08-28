@@ -51,8 +51,7 @@ const MessageList = ({messages}) => {
 
 
   return (
-    <>
-    <div className="h-[62vh] overflow-y-auto p-4 space-y-5 custom-scrollbar">
+    <div className="flex-1 overflow-y-auto p-4 space-y-5 custom-scrollbar">
       {messages.map((message, index) => (
         <div key={index} className="flex items-start gap-4">
           <div className="bg-gray-800 rounded-xl w-12 h-12 flex items-center justify-center text-lg">
@@ -81,7 +80,6 @@ const MessageList = ({messages}) => {
       ))}
       <div ref={messagesEndRef} />
     </div>
-    </>
   );
 };
 

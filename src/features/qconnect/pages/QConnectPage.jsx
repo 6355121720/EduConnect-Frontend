@@ -204,11 +204,11 @@ const QConnectMainPage = () => {
                       </div>
                     </div>
                     
-                    <div className="flex items-center gap-2">
+                    {/* <div className="flex items-center gap-2">
                       <span className="px-2.5 py-1 bg-gray-700 text-gray-300 rounded-full">
                         {question.views || 0} views
                       </span>
-                    </div>
+                    </div> */}
                   </div>
                 </div>
               </div>

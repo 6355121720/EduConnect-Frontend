@@ -1,6 +1,5 @@
-import {Client} from '@stomp/stompjs';
+import { Client } from '@stomp/stompjs';
 import SockJS from 'sockjs-client';
-
 
 class SocketService{
   socket = null;
@@ -10,11 +9,11 @@ class SocketService{
     if (this.socket && this.socket.active){
       this.socket.deactivate();
     }
-  
+
     let accessToken = localStorage.getItem("accessToken");
-  
+
     if (!accessToken) return;
-  
+
     this.socket = new Client({
       webSocketFactory: () => new SockJS(import.meta.env.VITE_BACKEND_URL + "/ws?token=" + accessToken),
       connectHeaders: {
@@ -31,7 +30,7 @@ class SocketService{
         console.log("Websocket error while connecting.", frame);
       }
     })
-  
+
     this.socket.activate();
   }
 
@@ -48,16 +47,54 @@ class SocketService{
       console.log("subscribing before stompclient is connected.");
       return null;
     }
-  
+
     return this.socket.subscribe("/user/queue/message", onMessageReceived);
   }
+
+  subscribeToNotifications() {
+    if (!this.socket || !this.socket.active) {
+      console.log("Cannot subscribe to notifications - socket not connected.");
+      return;
+    }
+
+    // Unsubscribe from previous notifications if any
+    if (this.notificationSubscription) {
+      this.notificationSubscription.unsubscribe();
+    }
+
+    // Subscribe to notifications
+    this.notificationSubscription = this.socket.subscribe(
+      "/user/queue/notifications",
+      (message) => {
+        console.log("Received notification:", message);
+        // Handle the notification here
+        // You might want to dispatch to Redux or call a callback
+        if (this.onNotificationCallback) {
+          this.onNotificationCallback(JSON.parse(message.body));
+        }
+      }
+    );
+
+    console.log("Subscribed to notifications");
+  }
+
+
+  setOnNotificationCallback(callback) {
+    this.onNotificationCallback = callback;
+    
+    // If already connected, subscribe immediately
+    if (this.isConnected) {
+      this.subscribeToNotifications();
+    }
+  }
+
 
   sendPrivateMessage(data){
     if (!this.socket || !this.socket.active){
       console.log("sending before stompclient is connected.");
       return null;
     }
-  
+
     this.socket.publish({
       destination: "/app/private-chat", 
       body: JSON.stringify(data)});

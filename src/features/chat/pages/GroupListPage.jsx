@@ -3,8 +3,10 @@ import GroupList from '../components/GroupList';
 import CreateGroupModal from '../components/CreateGroupModal';
 import SearchBar from '../components/SearchBar';
 import { getInvites, respondToInvite } from '../../../api/chatApi';
+import { myGroups, searchGroup } from '../../../api/chatApi';
 import { useSelector } from 'react-redux';
-import { Plus, Bell, Check, X } from 'lucide-react';
+import { Plus, Bell, Check, X , ArrowLeft} from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 
 const GroupListPage = () => {
   const [showCreateModal, setShowCreateModal] = useState(false);
@@ -12,10 +14,18 @@ const GroupListPage = () => {
   const [groupInvites, setGroupInvites] = useState([]);
   const currentUser = useSelector(store => store.auth.user);
   const [groups, setGroups] = useState([]);
+  const navigate = useNavigate();
+  const [loading , setLoading] = useState(false);
+  // ensure spinner shows immediately while GroupList performs its fetch
+  // useEffect(() => {
+    // setLoading(true);
+  //   // GroupList will clear loading when its fetch completes
+  // }, []);
   
   useEffect(() => {
     const fetchInvites = async () => {
       try {
+        setLoading(true);
         const res = await getInvites(currentUser);
         if (res.status === 200) {
           setGroupInvites(res.data);
@@ -26,9 +36,47 @@ const GroupListPage = () => {
       } catch (e) {
         console.log("Error while fetching invites.", e);
       }
+      setLoading(false);
     };
     fetchInvites();
   }, [currentUser]);
+
+  // fetch groups (debounced) and control loading here
+  useEffect(() => {
+    let active = true;
+    setLoading(true);
+
+    const fetch = async () => {
+      try {
+        let res;
+        if (!searchTerm || searchTerm.trim() === '') {
+          res = await myGroups();
+        } else {
+          res = await searchGroup(searchTerm.trim());
+        }
+
+        if (!active) return;
+
+        if (res && res.status === 200) {
+          setGroups(res.data);
+        } else {
+          setGroups([]);
+        }
+      } catch (e) {
+        console.log('Error fetching groups', e);
+        setGroups([]);
+      } finally {
+        if (active) setLoading(false);
+      }
+    };
+
+    const id = setTimeout(fetch, 500);
+
+    return () => {
+      active = false;
+      clearTimeout(id);
+    };
+  }, [searchTerm, currentUser]);
 
   const handleRespondToInvite = async (groupName, accept) => {
     try {
@@ -44,79 +92,18 @@ const GroupListPage = () => {
     }
   };
 
-  // return (
-  //   <div className="dark:bg-gray-900 min-h-screen text-white p-4">
-  //     <div className="max-w-6xl mx-auto">
-  //       <div className="flex justify-left items-center mb-6">
-  //         <h1 className="text-2xl font-bold">Your Groups</h1>
-  //       </div>
-        
-  //       <div className="flex justify-between items-center mb-4">
-  //         <SearchBar 
-  //           value={searchTerm} 
-  //           onChange={(e) => setSearchTerm(e.target.value)} 
-  //           placeholder="Search groups..."
-  //         />
-  //         <button 
-  //           onClick={() => setShowCreateModal(true)}
-  //           className="bg-blue-600 hover:bg-blue-700 px-4 py-2 rounded-lg"
-  //         >
-  //           Create Group
-  //         </button>
-  //       </div>
-
-  //       {/* Group Invites Section */}
-  //       {groupInvites.length > 0 && (
-  //         <div className="mb-6 bg-gray-800 rounded-lg p-4">
-  //           <h2 className="text-xl font-semibold mb-3">Group Invitations</h2>
-  //           <div className="space-y-3">
-  //             {groupInvites.map((invite, index) => (
-  //               <div key={index} className="flex items-center justify-between p-3 bg-gray-700 rounded-lg">
-  //                 <div className="flex items-center gap-3">
-  //                   <div 
-  //                     // src={invite.group.avatar || '/default-group.png'} 
-  //                     className="w-10 h-10 rounded-full bg-gray-600" 
-  //                     // alt="Group" 
-  //                   >
-  //                     {invite.groupName.at(0)}
-  //                   </div>
-  //                   <div>
-  //                     <p className="font-medium">{invite.groupName}</p>
-  //                     {/* <p className="text-sm text-gray-400">Invited by: {invite.}</p> */}
-  //                   </div>
-  //                 </div>
-  //                 <div className="flex gap-2">
-  //                   <button
-  //                     onClick={() => handleRespondToInvite(invite.groupName, true)}
-  //                     className="px-3 py-1 bg-green-600 hover:bg-green-500 rounded text-sm"
-  //                   >
-  //                     Accept
-  //                   </button>
-  //                   <button
-  //                     onClick={() => handleRespondToInvite(invite.groupName, false)}
-  //                     className="px-3 py-1 bg-red-600 hover:bg-red-500 rounded text-sm"
-  //                   >
-  //                     Reject
-  //                   </button>
-  //                 </div>
-  //               </div>
-  //             ))}
-  //           </div>
-  //         </div>
-  //       )}
-        
-  //       <GroupList groups={groups} setGroups={setGroups} searchTerm={searchTerm} />
-        
-  //       {showCreateModal && (
-  //         <CreateGroupModal setGroups={setGroups} onClose={() => setShowCreateModal(false)} />
-  //       )}
-  //     </div>
-  //   </div>
-  // );
   return (
     <div className="bg-gray-900 min-h-screen text-white p-5">
+      
       <div className="max-w-6xl mx-auto">
         <div className="flex justify-between items-center mb-8">
+          <button 
+          className="text-blue-400 hover:text-blue-300 flex items-center transition-colors"
+          onClick={() => navigate('/chat')}
+        >
+          <ArrowLeft className="w-5 h-5 mr-2" />
+          Chat Gateway
+        </button>
           <h1 className="text-2xl font-bold">Group Chats</h1>
           <button 
             onClick={() => setShowCreateModal(true)}
@@ -177,7 +164,8 @@ const GroupListPage = () => {
           </div>
         )}
         
-        <GroupList groups={groups} setGroups={setGroups} searchTerm={searchTerm} />
+        
+        <GroupList groups={groups} loading={loading} />
         
         {showCreateModal && (
           <CreateGroupModal setGroups={setGroups} onClose={() => setShowCreateModal(false)} />

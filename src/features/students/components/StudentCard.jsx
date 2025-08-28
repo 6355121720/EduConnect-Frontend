@@ -77,7 +77,7 @@ export default function StudentCard({ student, status }) {
         </div>
       </div>
 
-      <div className="mt-4 flex gap-2">
+      <div className="mt-4 flex gap-2 justify-center">
         {student.id === currentUser.id ? <button className = "border border-gray-300 rounded-xl p-2 md:p-3">Yourself</button> : (status === "NEVER" ? 
         <>
           <button id={student.id} onClick = {sendConnectionRequest} className = "border border-gray-300 rounded-xl p-2 md:p-3">CONNECT</button>
@@ -92,9 +92,9 @@ export default function StudentCard({ student, status }) {
             <button id={student.id} className = "border border-gray-300 rounded-xl p-2 md:p-3 cursor-not-allowed">{status}</button>
           </>
         ))}
-        <button className="flex-1 bg-gray-700 hover:bg-gray-600 text-white py-2 px-3 rounded-md text-sm flex items-center justify-center gap-1">
+        {/* <button className="flex-1 bg-gray-700 hover:bg-gray-600 text-white py-2 px-3 rounded-md text-sm flex items-center justify-center gap-1">
            Message
-        </button>
+        </button> */}
       </div>
     </div>
   );
