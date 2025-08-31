@@ -1,10 +1,12 @@
-import React, { useState } from 'react';
-import { useSelector } from 'react-redux';
+import React, { useEffect, useState } from 'react';
+import { useSelector , useDispatch } from 'react-redux';
 import BellButton from '../components/BellButton';
 import NotificationDrawer from '../components/NotificationDrawer';
 import ToastHost from '../components/ToastHost';
 import { Link } from 'react-router-dom';
 import FreindSuggestion from "./FreindSuggestion";
+import {fetchNotifications, addNotification} from '../../../store/slices/notificationsSlice';
+import SocketService from '../../../services/SocketService';
 
 
 const PrivateHome = () => {
@@ -105,7 +107,40 @@ const UpdatesHub = () => {
   const user = useSelector((s) => s.auth.user);
   const [drawerOpen, setDrawerOpen] = useState(false);
   const notificationsState = useSelector((s) => s.notifications);
+  const dispatch = useDispatch();
   const items = notificationsState.order.map((id) => notificationsState.byId[id]).filter(Boolean);
+
+  useEffect(() => {
+    dispatch(fetchNotifications());
+  }, [dispatch]);
+  const onNotificationReceived = (notifi) => {
+    dispatch(addNotification(notifi));
+
+    if ("Notification" in window && Notification.permission === "granted") {
+      new Notification(notifi.title || "New Notification", {
+        body: notifi.message || "",
+        // icon: "/icon-192.png", 
+      });
+    }
+  };
+
+  useEffect(() => {
+    let subscription;
+    const timeoutId = setTimeout(() => {
+      subscription = SocketService.setOnNotificationCallback(onNotificationReceived);
+    }, 1000);
+
+    return () => {
+      clearTimeout(timeoutId);
+      if (subscription) subscription();
+    };
+  }, []);
+
+  useEffect(() => {
+    if ("Notification" in window && Notification.permission !== "granted") {
+      Notification.requestPermission();
+    }
+  }, []);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-900 via-black to-gray-900">
@@ -137,7 +172,7 @@ const UpdatesHub = () => {
           </div>
 
           <div className="bg-gray-800 p-4 rounded-lg">
-            {notificationsState.status === 'loading' && <UpdatesListPlaceholder />}
+            {/* {notificationsState.status === 'loading' && <UpdatesListPlaceholder />} */}
 
             {notificationsState.status !== 'loading' && items.length === 0 && (
               <div className="p-8 text-center text-gray-400">
