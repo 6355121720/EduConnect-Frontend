@@ -145,6 +145,7 @@ export default function Header() {
           )}
 
           {isAuthenticated ? (
+            
             <div className="relative">
               <button 
                 className="user-dropdown-btn group flex items-center space-x-2 sm:space-x-3 focus:outline-none p-2 rounded-xl hover:bg-yellow-500/10 transition-all duration-300 border border-transparent hover:border-yellow-500/30" 
@@ -185,7 +186,7 @@ export default function Header() {
                       </div>
                     </div>
                   </div>
-                  <NotificationBell />
+
                   
                   <div className="py-2">
                     <Link 
@@ -260,39 +261,7 @@ export default function Header() {
         </div>
       )}
 
-      <style jsx>{`
-        .mobile-menu {
-          max-height: ${mobileMenuOpen ? '400px' : '0'};
-          overflow: hidden;
-        }
-        
-        /* Logo fallback for better browser compatibility */
-        @supports not (background-clip: text) {
-          .logo-fallback {
-            color: #eab308 !important;
-            background: none !important;
-          }
-        }
-        
-        /* Ensure logo is always visible */
-        .logo-text {
-          background: linear-gradient(to right, #facc15, #eab308, #ca8a04);
-          -webkit-background-clip: text;
-          background-clip: text;
-          -webkit-text-fill-color: transparent;
-          text-shadow: 0 0 30px rgba(250, 204, 21, 0.3);
-        }
-        
-        /* Fallback for older browsers */
-        .logo-text::before {
-          content: attr(data-text);
-          position: absolute;
-          top: 0;
-          left: 0;
-          color: #eab308;
-          z-index: -1;
-        }
-      `}</style>
+      
     </header>
   );
 }
