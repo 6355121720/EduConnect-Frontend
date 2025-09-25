@@ -20,6 +20,8 @@ const UserRegistrationsPage = () => {
       setError(null);
       const response = await eventApi.getMyRegistrations();
       setRegistrations(response.data);
+      console.log(response.data);
+      
     } catch (error) {
       console.error('Error loading registrations:', error);
       setError('Failed to load registrations');
@@ -45,9 +47,29 @@ const UserRegistrationsPage = () => {
   const handleDownloadTicket = async (registrationId) => {
     try {
       const response = await eventApi.downloadPdf(registrationId);
-      const blob = new Blob([response.data], { type: 'application/pdf' });
+      
+      // Handle direct PDF response from backend
+      let blob;
+      if (response.data instanceof Blob) {
+        blob = response.data;
+      } else {
+        // If response.data is not already a blob, create one
+        blob = new Blob([response.data], { type: 'application/pdf' });
+      }
+      
       const url = window.URL.createObjectURL(blob);
-      window.open(url);
+      
+      // Create a temporary download link
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `ticket-${registrationId}.pdf`;
+      document.body.appendChild(link);
+      link.click();
+      
+      // Clean up
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(url);
+      
     } catch (error) {
       console.error('Error downloading ticket:', error);
       alert('Failed to download ticket');
@@ -89,6 +111,8 @@ const UserRegistrationsPage = () => {
 
   const getEventStatus = (event) => {
     const now = new Date();
+    {console.log(event);
+    }
     const startDate = new Date(event.startDate);
     const endDate = new Date(event.endDate);
 
@@ -148,15 +172,17 @@ const UserRegistrationsPage = () => {
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {registrations.map((registration) => {
-              const eventStatus = getEventStatus(registration.event);
+              console.log(registration);
+              
+              const eventStatus = getEventStatus(registration);
               
               return (
                 <div key={registration.id} className="bg-gray-800 rounded-lg overflow-hidden">
                   {/* Event Banner */}
-                  {registration.event.bannerUrl && (
+                  {registration.bannerUrl && (
                     <img
-                      src={registration.event.bannerUrl}
-                      alt={registration.event.title}
+                      src={registration.bannerUrl}
+                      alt={registration.title}
                       className="w-full h-40 object-cover"
                       onError={(e) => {
                         e.target.style.display = 'none';
@@ -168,7 +194,7 @@ const UserRegistrationsPage = () => {
                     {/* Event Title and Status */}
                     <div className="flex justify-between items-start mb-4">
                       <h3 className="text-lg font-semibold text-white line-clamp-2">
-                        {registration.event.title}
+                        {registration.title}
                       </h3>
                       <span className={`text-xs px-2 py-1 rounded ${eventStatus.color} bg-opacity-20`}>
                         {eventStatus.label}
@@ -179,12 +205,12 @@ const UserRegistrationsPage = () => {
                     <div className="space-y-2 mb-4 text-sm">
                       <div className="flex items-center gap-2 text-gray-300">
                         <Calendar className="w-4 h-4 text-purple-400" />
-                        <span>{formatDate(registration.event.startDate)}</span>
+                        <span>{formatDate(registration.startDate)}</span>
                       </div>
                       
                       <div className="flex items-center gap-2 text-gray-300">
                         <MapPin className="w-4 h-4 text-purple-400" />
-                        <span className="truncate">{registration.event.location}</span>
+                        <span className="truncate">{registration.location}</span>
                       </div>
                       
                       <div className="flex items-center gap-2 text-gray-300">

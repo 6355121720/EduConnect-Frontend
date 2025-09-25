@@ -11,9 +11,9 @@ const DynamicFormSubmission = ({ eventId, formId, existingSubmission, onSubmissi
 
   useEffect(() => {
     loadForm();
-    if (existingSubmission) {
+    // if (existingSubmission) {
       loadExistingSubmission();
-    }
+    // }
   }, [eventId, formId]);
 
   const loadForm = async () => {
@@ -21,8 +21,6 @@ const DynamicFormSubmission = ({ eventId, formId, existingSubmission, onSubmissi
       setLoading(true);
       const response = await eventApi.getFormById(eventId, formId);
       setForm(response.data);
-      
-      // Initialize responses with empty values
       const initialResponses = {};
       response.data.fields.forEach(field => {
         initialResponses[field.id] = '';
@@ -151,9 +149,29 @@ const DynamicFormSubmission = ({ eventId, formId, existingSubmission, onSubmissi
         // Try to download ticket for new registrations
         try {
           const pdfResponse = await eventApi.downloadPdf(response.data.id);
-          const blob = new Blob([pdfResponse.data], { type: 'application/pdf' });
+          
+          // Handle direct PDF response from backend
+          let blob;
+          if (pdfResponse.data instanceof Blob) {
+            blob = pdfResponse.data;
+          } else {
+            // If response.data is not already a blob, create one
+            blob = new Blob([pdfResponse.data], { type: 'application/pdf' });
+          }
+          
           const url = window.URL.createObjectURL(blob);
-          window.open(url);
+          
+          // Create a temporary download link
+          const link = document.createElement('a');
+          link.href = url;
+          link.download = `ticket-${response.data.id}.pdf`;
+          document.body.appendChild(link);
+          link.click();
+          
+          // Clean up
+          document.body.removeChild(link);
+          window.URL.revokeObjectURL(url);
+          
         } catch (pdfError) {
           console.error('Error downloading ticket:', pdfError);
         }
@@ -289,6 +307,7 @@ const DynamicFormSubmission = ({ eventId, formId, existingSubmission, onSubmissi
                   Deadline: {new Date(form.deadline).toLocaleString()}
                 </div>
               )}
+              
             </div>
             <button
               onClick={onClose}

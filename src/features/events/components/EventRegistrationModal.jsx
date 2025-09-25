@@ -6,6 +6,8 @@ import {
   Clock,
   FileText,
   AlertCircle,
+  Download,
+  Trash2,
 } from 'lucide-react';
 import eventApi from '../../../api/eventApi';
 import DynamicFormSubmission from './DynamicFormSubmission';
@@ -25,6 +27,8 @@ const EventRegistrationModal = ({
   const [showFormSubmission, setShowFormSubmission] = useState(false);
   const [selectedFormId, setSelectedFormId] = useState(null);
   const [availableSpots, setAvailableSpots] = useState(null);
+  const [showUnregisterModal, setShowUnregisterModal] = useState(false);
+  const [unregistering, setUnregistering] = useState(false);
 
   useEffect(() => {
     if (show && eventId) {
@@ -41,14 +45,14 @@ const EventRegistrationModal = ({
       const eventResponse = await eventApi.getEventById(eventId);
       setEvent(eventResponse.data);
 
-      try {
-        const spotsResponse = await eventApi.getAvailableSpots(eventId);
-        // console.log(spotsResponse.data);
+        try {
+          const spotsResponse = await eventApi.getAvailableSpots(eventId);
+          // console.log(spotsResponse.data);
 
-        setAvailableSpots(spotsResponse.data);
-      } catch (spotsError) {
-        setAvailableSpots(null);
-      }
+          setAvailableSpots(spotsResponse.data);
+        } catch (spotsError) {
+          setAvailableSpots(null);
+        }
 
       try {
         const statusResponse = await eventApi.getRegistrationStatus(eventId);
@@ -85,9 +89,29 @@ const EventRegistrationModal = ({
       // Try to download ticket
       try {
         const pdfResponse = await eventApi.downloadPdf(response.data.id);
-        const blob = new Blob([pdfResponse.data], { type: 'application/pdf' });
+        
+        // Handle direct PDF response from backend
+        let blob;
+        if (pdfResponse.data instanceof Blob) {
+          blob = pdfResponse.data;
+        } else {
+          // If response.data is not already a blob, create one
+          blob = new Blob([pdfResponse.data], { type: 'application/pdf' });
+        }
+        
         const url = window.URL.createObjectURL(blob);
-        window.open(url);
+        
+        // Create a temporary download link
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = `ticket-${response.data.id}.pdf`;
+        document.body.appendChild(link);
+        link.click();
+        
+        // Clean up
+        document.body.removeChild(link);
+        window.URL.revokeObjectURL(url);
+        
       } catch (pdfError) {
         console.error('Error downloading ticket:', pdfError);
       }
@@ -113,6 +137,58 @@ const EventRegistrationModal = ({
     onClose();
   };
 
+  const handleDownloadTicket = async () => {
+    try {
+      if (registrationStatus && registrationStatus.id) {
+        const pdfResponse = await eventApi.downloadPdf(registrationStatus.id);
+        
+        // Handle direct PDF response from backend
+        let blob;
+        if (pdfResponse.data instanceof Blob) {
+          blob = pdfResponse.data;
+        } else {
+          // If response.data is not already a blob, create one
+          blob = new Blob([pdfResponse.data], { type: 'application/pdf' });
+        }
+        
+        const url = window.URL.createObjectURL(blob);
+        
+        // Create a temporary download link
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = `ticket-${registrationStatus.id}.pdf`;
+        document.body.appendChild(link);
+        link.click();
+        
+        // Clean up
+        document.body.removeChild(link);
+        window.URL.revokeObjectURL(url);
+      }
+    } catch (error) {
+      console.error('Error downloading ticket:', error);
+      setError('Failed to download ticket');
+    }
+  };
+
+  const handleUnregister = async (formId) => {
+    try {
+      setUnregistering(true);
+      setError(null);
+
+      await eventApi.deleteForm(eventId, formId);
+      
+      setShowUnregisterModal(null);
+      onRegistrationComplete(null); // Notify parent that registration was removed
+      onClose();
+    } catch (error) {
+      console.error('Error unregistering from event:', error);
+      setError(error.response?.data?.message || 'Failed to unregister from event');
+      setShowUnregisterModal(null);
+    } finally {
+      setUnregistering(false);
+    }
+  };
+
   const formatDate = dateString => {
     return new Date(dateString).toLocaleDateString('en-US', {
       weekday: 'long',
@@ -133,8 +209,16 @@ const EventRegistrationModal = ({
   };
 
   if (!show) return null;
+  {
+                console.log("sahgdhasgdyuasgdyasu ++++++++++++++++++++++++++++++" + showFormSubmission + "======" + selectedFormId )
+                
+              }
 
   if (showFormSubmission && selectedFormId) {
+    {
+                console.log("sahgdhasgdyuasgdyasu ++++++++++++++++++++++++++++++")
+                
+              }
     return (
       <DynamicFormSubmission
         eventId={eventId}
@@ -147,7 +231,7 @@ const EventRegistrationModal = ({
         }}
       />
     );
-  }
+  }  
 
   if (loading) {
     return (
@@ -266,15 +350,24 @@ const EventRegistrationModal = ({
                 <FileText className="w-5 h-5" />
                 <span>You are already registered for this event</span>
               </div>
-              {activeForm && (
+              <div className="flex gap-2">
                 <button
-                  onClick={() => setShowFormSubmission(true)}
-                  className="w-full py-2 px-4 bg-green-600 hover:bg-green-700 text-white rounded-lg transition-colors duration-200 flex items-center justify-center gap-2"
+                  onClick={handleDownloadTicket}
+                  className="flex-1 py-2 px-4 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors duration-200 flex items-center justify-center gap-2"
                 >
-                  <FileText className="w-4 h-4" />
-                  View/Edit Registration Form
+                  <Download className="w-4 h-4" />
+                  Download Ticket
                 </button>
-              )}
+                {/* {activeForm && (
+                  <button
+                    onClick={() => handleFormRegistration(isAlreadyRegistered)}
+                    className="flex-1 py-2 px-4 bg-green-600 hover:bg-green-700 text-white rounded-lg transition-colors duration-200 flex items-center justify-center gap-2"
+                  >
+                    <FileText className="w-4 h-4" />
+                    View/Edit Registration Form
+                  </button>
+                )} */}
+              </div>
             </div>
           )}
 
@@ -340,25 +433,89 @@ const EventRegistrationModal = ({
 
           {/* Registration Buttons */}
           <div className="flex justify-end gap-3 pt-4 border-t border-gray-600">
-            <button
-              onClick={onClose}
-              className="px-6 py-2 text-gray-400 hover:text-white bg-gray-700 rounded-lg"
-            >
-              Close
-            </button>
-
-            {canRegister && !activeForm && (
-              <button
-                onClick={handleSimpleRegistration}
-                disabled={registering}
-                className="px-6 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                {registering ? 'Registering...' : 'Register Now'}
-              </button>
+            {isAlreadyRegistered ? (
+              // Already registered - show Update, Unregister, Cancel buttons
+              <>
+                <button
+                  onClick={onClose}
+                  className="px-6 py-2 text-gray-400 hover:text-white bg-gray-700 rounded-lg"
+                >
+                  Cancel / Back
+                </button>
+                <button
+                  onClick={() => setShowUnregisterModal(isAlreadyRegistered)}
+                  disabled={unregistering}
+                  className="px-6 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+                >
+                  <Trash2 className="w-4 h-4" />
+                  {unregistering ? 'Unregistering...' : 'Unregister'}
+                </button>
+                {activeForm && (
+                  <button
+                    onClick={() => handleFormRegistration(isAlreadyRegistered)}
+                    className="px-6 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 flex items-center gap-2"
+                  >
+                    <FileText className="w-4 h-4" />
+                    Update Registration
+                  </button>
+                )}
+              </>
+            ) : (
+              // Not registered - show original buttons
+              <>
+                <button
+                  onClick={onClose}
+                  className="px-6 py-2 text-gray-400 hover:text-white bg-gray-700 rounded-lg"
+                >
+                  Close
+                </button>
+                {canRegister && !activeForm && (
+                  <button
+                    onClick={handleSimpleRegistration}
+                    disabled={registering}
+                    className="px-6 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    {registering ? 'Registering...' : 'Register Now'}
+                  </button>
+                )}
+              </>
             )}
           </div>
         </div>
       </div>
+
+      {/* Unregister Confirmation Modal */}
+      {showUnregisterModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-70 z-60 flex justify-center items-center">
+          <div className="bg-gray-800 rounded-lg p-6 max-w-md mx-4 border border-gray-600">
+            <div className="flex items-center gap-3 text-red-400 mb-4">
+              <AlertCircle className="w-6 h-6" />
+              <h3 className="text-lg font-semibold">Confirm Unregistration</h3>
+            </div>
+            
+            <p className="text-gray-300 mb-6">
+              Are you sure you want to unregister from this event? This action cannot be undone.
+            </p>
+            
+            <div className="flex justify-end gap-3">
+              <button
+                onClick={() => setShowUnregisterModal(null)}
+                className="px-4 py-2 text-gray-400 hover:text-white bg-gray-700 hover:bg-gray-600 rounded-lg transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={() => handleUnregister(showUnregisterModal)}
+                disabled={unregistering}
+                className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+              >
+                <Trash2 className="w-4 h-4" />
+                {unregistering ? 'Unregistering...' : 'Confirm Unregister'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

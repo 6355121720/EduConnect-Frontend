@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
+import eventApi from '../../../api/eventApi';
 import { 
   Calendar, 
   MapPin, 
@@ -21,7 +22,9 @@ import {
   setSearchQuery,
   setFilterType,
   clearError,
-  clearSuccessMessage
+  clearSuccessMessage,
+  fetchAvailableSpots,
+  setAvailableSpots
 } from '../../../store/slices/eventsSlice';
 import EventRegistrationModal from './EventRegistrationModal';
 import DynamicFormSubmission from './DynamicFormSubmission';
@@ -42,7 +45,8 @@ const EnhancedEventList = ({
     currentPage,
     eventsLoading,
     error,
-    successMessage
+    successMessage,
+    availableSpots
   } = useSelector(state => state.events);
   
   const { user } = useSelector(state => state.auth);
@@ -52,7 +56,7 @@ const EnhancedEventList = ({
   const [registering, setRegistering] = useState(null);
   const [deleting, setDeleting] = useState(null);
   const [submissionModal, setSubmissionModal] = useState({ show: false, eventId: null, formId: null });
-
+  const [registrationStatuses, setRegistrationStatuses] = useState({});
   useEffect(() => {
     loadEvents();
   }, [currentPage, searchQuery, filterType]);
@@ -64,6 +68,17 @@ const EnhancedEventList = ({
     }
   }, [successMessage, dispatch]);
 
+  useEffect(() => {
+    if (events && events.length > 0) {
+      const eventIds = events.filter(event => event && event.id).map(event => event.id);
+      dispatch(fetchAvailableSpots(eventIds));
+      
+      if (user) {
+        loadRegistrationStatuses();
+      }
+    }
+  }, [events, user, dispatch]);
+
   const loadEvents = () => {
     dispatch(fetchEvents({
       page: currentPage,
@@ -73,19 +88,68 @@ const EnhancedEventList = ({
     }));
   };
 
+  const loadRegistrationStatuses = async () => {
+    if (!user) return;
+    
+    const statuses = {};
+    const validEvents = events.filter(event => event && event.id);
+    
+    try {
+      await Promise.all(
+        validEvents.map(async (event) => {
+          try {
+            const response = await eventApi.getRegistrationStatus(event.id);
+            statuses[event.id] = response.data;
+          } catch (error) {
+            // If not registered or error, set as null
+            statuses[event.id] = null;
+          }
+        })
+      );
+      setRegistrationStatuses(statuses);
+    } catch (error) {
+      console.error('Error loading registration statuses:', error);
+    }
+  };
+
   const handleRegister = async (eventId) => {
     setRegistering(eventId);
     try {
       const result = await dispatch(registerForEvent(eventId)).unwrap();
       
+      // Update registration status in state
+      setRegistrationStatuses(prev => ({
+        ...prev,
+        [eventId]: result.registration
+      }));
+      
       // Try to download ticket
       try {
         const eventApi = await import('../../../api/eventApi');
         const response = await eventApi.default.downloadPdf(result.registration.id);
-        const blob = new Blob([response.data], { type: 'application/pdf' });
+        
+        // Handle direct PDF response from backend
+        let blob;
+        if (response.data instanceof Blob) {
+          blob = response.data;
+        } else {
+          // If response.data is not already a blob, create one
+          blob = new Blob([response.data], { type: 'application/pdf' });
+        }
+        
         const url = window.URL.createObjectURL(blob);
-        window.open(url);
+        
+        // Create a temporary download link
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = `ticket-${result.registration.id}.pdf`;
+        document.body.appendChild(link);
+        link.click();
+        
+        // Clean up
+        document.body.removeChild(link);
         window.URL.revokeObjectURL(url);
+        
       } catch (pdfError) {
         console.error('Error downloading ticket:', pdfError);
       }
@@ -96,10 +160,16 @@ const EnhancedEventList = ({
     }
   };
 
-  const handleUnregister = async (eventId) => {
+  const handleUnregister = async (eventId , formId) => {
     if (window.confirm('Are you sure you want to unregister from this event?')) {
       try {
-        await dispatch(unregisterFromEvent(eventId)).unwrap();
+        await dispatch(unregisterFromEvent({ eventId, formId })).unwrap();
+
+        // Update registration status in state
+        setRegistrationStatuses(prev => ({
+          ...prev,
+          [eventId]: null
+        }));
       } catch (error) {
         console.error('Unregistration failed:', error);
       }
@@ -119,9 +189,25 @@ const EnhancedEventList = ({
     }
   };
 
-  const handleRegistrationComplete = () => {
+  const handleRegistrationComplete = (registrationData) => {
+    const eventId = registrationModal.eventId;
     setRegistrationModal({ show: false, eventId: null });
-    loadEvents(); // Reload to update registration status
+    
+    // Update registration status in state
+    if (registrationData) {
+      setRegistrationStatuses(prev => ({
+        ...prev,
+        [eventId]: registrationData
+      }));
+    } else {
+      // Registration was removed (unregistered)
+      setRegistrationStatuses(prev => ({
+        ...prev,
+        [eventId]: null
+      }));
+    }
+    
+    loadEvents(); // Reload to update other event data
   };
 
   const formatDate = (dateString) => {
@@ -198,8 +284,14 @@ const EnhancedEventList = ({
 
   const getAvailableSpots = (event) => {
     if (!hasCapacityLimit(event)) return Infinity;
+    
+    // First check if we have available spots data from Redux store
+    if (availableSpots[event.id] !== null && availableSpots[event.id] !== undefined) {
+      return availableSpots[event.id];
+    }
+    
+    // Fallback to calculating from event data
     const cap = Number(event.maxParticipants);
-    // Handle both currentRegistrations and currentParticipants from backend
     const current = Number(event.currentRegistrations || event.currentParticipants || 0);
     return cap - current;
   };
@@ -274,7 +366,7 @@ const EnhancedEventList = ({
               (event.creatorId && user?.id && event.creatorId === user.id) ||
               (event.createdById && user?.id && event.createdById === user.id)
             );
-            const isRegistered = event.isRegistered;
+            const isRegistered = registrationStatuses[event.id];
 
             return (
               <div key={event.id} className="bg-gray-800 rounded-lg overflow-hidden hover:bg-gray-750 transition-colors">
@@ -318,6 +410,8 @@ const EnhancedEventList = ({
                     </div>
                   </div>
                 )}
+
+
                 
                 <div className="p-6">
                   {/* Event Title and University */}
@@ -477,8 +571,10 @@ const EnhancedEventList = ({
                               onClick={async () => {
                                 try {
                                   const { default: eventApi } = await import('../../../api/eventApi');
-                                  const formRes = await eventApi.getActiveForm(event.id);
-                                  setSubmissionModal({ show: true, eventId: event.id, formId: formRes.data.id });
+                                  const formRes = await eventApi.getRegistrationStatus(event.id);
+                                  // {console.log(formRes.data + "++++++++++++++++++++++++++++++++++++++++")
+                                  // }
+                                  setSubmissionModal({ show: true, eventId: event.id, formId: formRes.data });
                                 } catch (e) {
                                   console.error('No active form or failed to load:', e);
                                   // Fallback: navigate to my registrations
@@ -490,7 +586,7 @@ const EnhancedEventList = ({
                               View/Edit Response
                             </button>
                             <button
-                              onClick={() => handleUnregister(event.id)}
+                              onClick={() => handleUnregister(event.id, isRegistered)}
                               className="flex-1 px-3 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 text-sm"
                             >
                               Unregister

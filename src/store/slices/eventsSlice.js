@@ -21,6 +21,9 @@ export const fetchEvents = createAsyncThunk(
           case 'popular':
             response = await eventApi.getPopularEvents();
             break;
+          case 'my-created':
+            response = await eventApi.getMyCreatedEvents();
+            break;
           default:
             response = await eventApi.getAllEvents(page, size, sortBy, sortDirection);
         }
@@ -114,12 +117,38 @@ export const registerForEvent = createAsyncThunk(
 
 export const unregisterFromEvent = createAsyncThunk(
   'events/unregisterFromEvent',
-  async (eventId, { rejectWithValue }) => {
+  async ({ eventId, formId }, { rejectWithValue }) => {
     try {
-      await eventApi.unregisterFromEvent(eventId);
+      await eventApi.deleteFormFromSubmission(eventId, formId);
       return eventId;
     } catch (error) {
       return rejectWithValue(error.response?.data?.message || 'Failed to unregister from event');
+    }
+  }
+);
+
+export const fetchAvailableSpots = createAsyncThunk(
+  'events/fetchAvailableSpots',
+  async (eventIds, { rejectWithValue }) => {
+    try {
+      const spotsPromises = eventIds.map(async (eventId) => {
+        try {
+          const response = await eventApi.getAvailableSpots(eventId);
+          return { eventId, availableSpots: response.data };
+        } catch (error) {
+          return { eventId, availableSpots: null };
+        }
+      });
+      
+      const results = await Promise.all(spotsPromises);
+      const spotsMap = {};
+      results.forEach(({ eventId, availableSpots }) => {
+        spotsMap[eventId] = availableSpots;
+      });
+      
+      return spotsMap;
+    } catch (error) {
+      return rejectWithValue(error.message || 'Failed to fetch available spots');
     }
   }
 );
@@ -136,6 +165,9 @@ const initialState = {
   
   // User registrations
   myRegistrations: [],
+  
+  // Available spots for events
+  availableSpots: {},
   
   // Search and filters
   searchQuery: '',
@@ -182,6 +214,15 @@ const eventsSlice = createSlice({
     },
     clearCurrentEvent: (state) => {
       state.currentEvent = null;
+    },
+    updateAvailableSpots: (state, action) => {
+      const { eventId, change } = action.payload;
+      if (state.availableSpots[eventId] !== null && state.availableSpots[eventId] !== undefined) {
+        state.availableSpots[eventId] = Math.max(0, state.availableSpots[eventId] + change);
+      }
+    },
+    setAvailableSpots: (state, action) => {
+      state.availableSpots = { ...state.availableSpots, ...action.payload };
     },
     resetEventsState: () => initialState
   },
@@ -310,6 +351,10 @@ const eventsSlice = createSlice({
             state.currentEvent.currentRegistrations += 1;
           }
         }
+        // Update available spots (decrease by 1)
+        if (state.availableSpots[action.payload.eventId] !== null && state.availableSpots[action.payload.eventId] !== undefined) {
+          state.availableSpots[action.payload.eventId] = Math.max(0, state.availableSpots[action.payload.eventId] - 1);
+        }
       })
       .addCase(registerForEvent.rejected, (state, action) => {
         state.loading = false;
@@ -342,10 +387,27 @@ const eventsSlice = createSlice({
         state.myRegistrations = state.myRegistrations.filter(
           reg => reg.event.id !== action.payload
         );
+        // Update available spots (increase by 1)
+        if (state.availableSpots[action.payload] !== null && state.availableSpots[action.payload] !== undefined) {
+          state.availableSpots[action.payload] = state.availableSpots[action.payload] + 1;
+        }
       })
       .addCase(unregisterFromEvent.rejected, (state, action) => {
         state.loading = false;
         state.registrationError = action.payload;
+      })
+      
+      // Fetch Available Spots
+      .addCase(fetchAvailableSpots.pending, (state) => {
+        state.loading = true;
+      })
+      .addCase(fetchAvailableSpots.fulfilled, (state, action) => {
+        state.loading = false;
+        state.availableSpots = { ...state.availableSpots, ...action.payload };
+      })
+      .addCase(fetchAvailableSpots.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload;
       });
   }
 });
@@ -358,6 +420,8 @@ export const {
   clearSuccessMessage,
   setCurrentEvent,
   clearCurrentEvent,
+  updateAvailableSpots,
+  setAvailableSpots,
   resetEventsState
 } = eventsSlice.actions;
 

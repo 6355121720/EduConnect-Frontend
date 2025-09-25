@@ -34,14 +34,26 @@ const MyRegistrations = () => {
       setTicketError(null);
       const response = await eventApi.downloadPdf(reg_id);
       
-      // Create blob and URL
-      const blob = new Blob([response.data], { type: 'application/pdf' });
+      // Handle direct PDF response from backend
+      let blob;
+      if (response.data instanceof Blob) {
+        blob = response.data;
+      } else {
+        // If response.data is not already a blob, create one
+        blob = new Blob([response.data], { type: 'application/pdf' });
+      }
+      
       const url = URL.createObjectURL(blob);
       
-      // Open in new tab
-      window.open(url);
+      // Create a temporary download link
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `ticket-${reg_id}.pdf`;
+      document.body.appendChild(link);
+      link.click();
       
       // Clean up
+      document.body.removeChild(link);
       setTimeout(() => URL.revokeObjectURL(url), 1000);
     } catch (pdfError) {
       console.error('Error downloading PDF:', pdfError);

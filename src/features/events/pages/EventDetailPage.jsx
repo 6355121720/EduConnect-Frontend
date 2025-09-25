@@ -17,6 +17,8 @@ import {
   TrendingUp,
   UserCheck
 } from 'lucide-react';
+
+
 import { fetchEventById, clearSuccessMessage } from '../../../store/slices/eventsSlice';
 import EventRegistrationModal from '../components/EventRegistrationModal';
 import FormBuilder from '../components/FormBuilder';
@@ -27,6 +29,9 @@ const EventDetailPage = () => {
   const { eventId } = useParams();
   const navigate = useNavigate();
   const dispatch = useDispatch();
+  const {
+    availableSpots
+  } = useSelector(state => state.events);
   
   const { currentEvent: event, loading, error, successMessage } = useSelector(state => state.events);
   
@@ -52,6 +57,20 @@ const EventDetailPage = () => {
     }
   }, [successMessage, dispatch]);
 
+  // const getAvailableSpots = (event) => {
+  //   if (!hasCapacityLimit(event)) return Infinity;
+    
+  //   // First check if we have available spots data from Redux store
+  //   if (availableSpots[event.id] !== null && availableSpots[event.id] !== undefined) {
+  //     return availableSpots[event.id];
+  //   }
+    
+  //   // Fallback to calculating from event data
+  //   const cap = Number(event.maxParticipants);
+  //   const current = Number(event.currentRegistrations || event.currentParticipants || 0);
+  //   return cap - current;
+  // };
+
   const loadSupplemental = async () => {
     try {
       const [creatorRes, statusRes, formRes] = await Promise.allSettled([
@@ -76,9 +95,11 @@ const EventDetailPage = () => {
     if (!window.confirm('Are you sure you want to unregister from this event?')) {
       return;
     }
+
+    const formId = await eventApi.getFormSubmission();
     
     try {
-      await eventApi.unregisterFromEvent(eventId);
+      await eventApi.deleteFormFromSubmission(eventId , formId);
       loadSupplemental();
     } catch (error) {
       console.error('Error unregistering:', error);
@@ -104,10 +125,16 @@ const EventDetailPage = () => {
   };
 
   const getAvailableSpots = () => {
-    if (!event) return 0;
     if (!hasCapacityLimit()) return Infinity;
-    const current = Number(registrationStatus?.currentRegistrations ?? event.currentRegistrations ?? 0);
+    
+    // First check if we have available spots data from Redux store
+    if (availableSpots[eventId] !== null && availableSpots[eventId] !== undefined) {
+      return availableSpots[eventId];
+    }
+    
+    // Fallback to calculating from event data
     const cap = Number(event.maxParticipants);
+    const current = Number(event.currentRegistrations || event.currentParticipants || 0);
     return cap - current;
   };
 
