@@ -66,6 +66,10 @@ const eventApi = {
     return apiClient.get(`${BASE_URL}/is-active/${eventId}`);
   },
 
+  getRegistrationStatus: async (eventId) => {
+    return apiClient.get(`${BASE_URL}/${eventId}/registration-status`);
+  },
+
   // Registration endpoints
   registerForEvent: async (eventId) => {
     return apiClient.post(`/register/${eventId}`);
@@ -109,7 +113,77 @@ const eventApi = {
         },
         withCredentials: true
     });
-  }
+  },
+
+  // Form Management endpoints
+  createForm: async (eventId, formData) => {
+    return apiClient.post(`${BASE_URL}/${eventId}/forms/`, formData);
+  },
+
+  updateForm: async (eventId, formId, formData) => {
+    return apiClient.put(`${BASE_URL}/${eventId}/forms/${formId}`, formData);
+  },
+
+  getActiveForm: async (eventId) => {
+    return apiClient.get(`${BASE_URL}/${eventId}/forms/active`);
+  },
+
+  getFormById: async (eventId, formId) => {
+    return apiClient.get(`${BASE_URL}/${eventId}/forms/${formId}`);
+  },
+
+  deleteForm: async (eventId, formId) => {
+    return apiClient.delete(`${BASE_URL}/${eventId}/forms/${formId}`);
+  },
+
+  // Form Submission endpoints
+  submitForm: async (eventId, formId, responses) => {
+    return apiClient.post(`${BASE_URL}/${eventId}/forms/${formId}/submit`, { responses });
+  },
+
+  updateFormSubmission: async (eventId, formId, responses) => {
+    return apiClient.put(`${BASE_URL}/${eventId}/forms/${formId}/update`, { responses });
+  },
+
+  getFormSubmission: async (eventId, formId) => {
+    return apiClient.get(`${BASE_URL}/${eventId}/forms/${formId}/registration`);
+  },
+
+  // Enhanced Registration endpoints for form-based registration
+  registerForEventWithForm: async (eventId, formId, responses) => {
+    return apiClient.post(`${BASE_URL}/${eventId}/forms/${formId}/submit`, { responses });
+  },
+
+  // Additional utility endpoints
+  // checkRegistrationEligibility: async (eventId) => {
+  //   return apiClient.get(`${BASE_URL}/${eventId}/eligibility`);
+  // },
+
+  // getRegistrationStatus: async (eventId) => {
+  //   return apiClient.get(`${BASE_URL}/${eventId}/registration-status`);
+  // },
+
+  // // Event analytics for creators
+  // getEventAnalytics: async (eventId) => {
+  //   return apiClient.get(`${BASE_URL}/${eventId}/analytics`);
+  // },
+
+  // getEventRegistrationsList: async (eventId, page = 0, size = 20) => {
+  //   return apiClient.get(`${BASE_URL}/${eventId}/registrations-list`, {
+  //     params: { page, size }
+  //   });
+  // },
+
+  // // Search and filter enhanced
+  // searchEventsAdvanced: async (params) => {
+  //   return apiClient.get(`${BASE_URL}/search/advanced`, { params });
+  // },
+
+  // getEventsByStatus: async (status, page = 0, size = 20) => {
+  //   return apiClient.get(`${BASE_URL}/status/${status}`, {
+  //     params: { page, size }
+  //   });
+  // }
 
   // getEventsCreatedByUser: async (userId) => {
   //   return apiClient.get(`${BASE_URL}/createdBy/${userId}`);

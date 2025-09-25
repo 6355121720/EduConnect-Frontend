@@ -1,44 +1,47 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
+import { useDispatch, useSelector } from 'react-redux';
+import { Search, Filter, Calendar, Users, Plus } from 'lucide-react';
 import EventList from '../components/EventList';
 import CreateEventModal from '../components/CreateEventModal';
+import { setSearchQuery, setFilterType } from '../../../store/slices/eventsSlice';
 
 const EventsPage = () => {
+  const dispatch = useDispatch();
+  const { searchQuery, filterType } = useSelector(state => state.events);
+  
   const [showCreateModal, setShowCreateModal] = useState(false);
-  const [searchQuery, setSearchQuery] = useState('');
-  const [filterType, setFilterType] = useState('upcoming');
+  const [showAdvancedSearch, setShowAdvancedSearch] = useState(false);
   const [dateRange, setDateRange] = useState({ startDate: '', endDate: '' });
   const [creatorFilter, setCreatorFilter] = useState(null);
-  const [showAdvancedSearch, setShowAdvancedSearch] = useState(false);
 
   const handleCreateEvent = () => {
     setShowCreateModal(true);
   };
 
   const handleEventCreated = () => {
-    window.location.reload();
+    setShowCreateModal(false);
+    // Events will auto-refresh through Redux
   };
 
-  const handleDateRangeSearch = () => {
-    if (dateRange.startDate && dateRange.endDate) {
-      setSearchQuery('');
-      setCreatorFilter(null);
-      setFilterType('all');
-    }
+  const handleSearchChange = (value) => {
+    dispatch(setSearchQuery(value));
   };
 
-  const handleCreatorSelect = (creatorId) => {
-    setCreatorFilter(creatorId);
-    setSearchQuery('');
-    setDateRange({ startDate: '', endDate: '' });
-    setFilterType('all');
+  const handleFilterChange = (value) => {
+    dispatch(setFilterType(value));
   };
 
   const clearFilters = () => {
-    setSearchQuery('');
+    dispatch(setSearchQuery(''));
+    dispatch(setFilterType('all'));
     setDateRange({ startDate: '', endDate: '' });
     setCreatorFilter(null);
-    setFilterType('all');
+  };
+
+  const handleDateRangeSearch = () => {
+    // This could trigger a search with date range
+    // For now, the EventList component will handle the dateRange prop
   };
 
   return (
@@ -79,7 +82,7 @@ const EventsPage = () => {
               type="text"
               placeholder="Search events..."
               value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
+              onChange={(e) => handleSearchChange(e.target.value)}
               className="w-full pl-10 pr-4 py-2.5 bg-gray-700 text-white rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-600"
             />
             <svg 
@@ -94,7 +97,7 @@ const EventsPage = () => {
           
           <select
             value={filterType}
-            onChange={(e) => setFilterType(e.target.value)}
+            onChange={(e) => handleFilterChange(e.target.value)}
             className="px-4 py-2.5 bg-gray-700 text-white rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-600"
           >
             <option value="upcoming">Upcoming</option>
