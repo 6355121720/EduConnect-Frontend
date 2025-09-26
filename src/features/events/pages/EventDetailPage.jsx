@@ -19,7 +19,7 @@ import {
 } from 'lucide-react';
 
 
-import { fetchEventById, clearSuccessMessage } from '../../../store/slices/eventsSlice';
+import { fetchEventById, clearSuccessMessage , fetchAvailableSpots } from '../../../store/slices/eventsSlice';
 import EventRegistrationModal from '../components/EventRegistrationModal';
 import FormBuilder from '../components/FormBuilder';
 import DynamicFormSubmission from '../components/DynamicFormSubmission';
@@ -46,7 +46,7 @@ const EventDetailPage = () => {
 
   useEffect(() => {
     if (eventId) {
-      dispatch(fetchEventById(eventId));
+      dispatch(fetchEventById(eventId)); 
     }
   }, [eventId, dispatch]);
 
@@ -56,6 +56,10 @@ const EventDetailPage = () => {
       return () => clearTimeout(timer);
     }
   }, [successMessage, dispatch]);
+
+  useEffect(() =>{
+    dispatch(fetchAvailableSpots([eventId]));
+  },[showRegistrationModal])
 
   // const getAvailableSpots = (event) => {
   //   if (!hasCapacityLimit(event)) return Infinity;
@@ -96,11 +100,13 @@ const EventDetailPage = () => {
       return;
     }
 
-    const formId = await eventApi.getFormSubmission();
+    
+      
     
     try {
-      await eventApi.deleteFormFromSubmission(eventId , formId);
+      await eventApi.deleteFormFromSubmission(eventId , registrationStatus);
       loadSupplemental();
+      dispatch(fetchAvailableSpots([eventId]));
     } catch (error) {
       console.error('Error unregistering:', error);
       alert('Failed to unregister from event');
@@ -124,29 +130,29 @@ const EventDetailPage = () => {
     return Number.isFinite(cap) && cap > 0;
   };
 
-  const getAvailableSpots = () => {
-    if (!hasCapacityLimit()) return Infinity;
+  // const getAvailableSpots = () => {
+  //   if (!hasCapacityLimit()) return Infinity;
     
-    // First check if we have available spots data from Redux store
-    if (availableSpots[eventId] !== null && availableSpots[eventId] !== undefined) {
-      return availableSpots[eventId];
-    }
+  //   // First check if we have available spots data from Redux store
+  //   if (availableSpots[eventId] !== null && availableSpots[eventId] !== undefined) {
+  //     return availableSpots[eventId];
+  //   }
     
-    // Fallback to calculating from event data
-    const cap = Number(event.maxParticipants);
-    const current = Number(event.currentRegistrations || event.currentParticipants || 0);
-    return cap - current;
-  };
+  //   // Fallback to calculating from event data
+  //   const cap = Number(event.maxParticipants);
+  //   const current = Number(event.currentRegistrations || event.currentParticipants || 0);
+  //   return cap - current;
+  // };
 
-  const isEventFull = hasCapacityLimit() ? getAvailableSpots() <= 0 : false;
+  const isEventFull = hasCapacityLimit() ? availableSpots[event.id] <= 0 : false;
   const isEventPast = new Date(event?.endDate) < new Date();
-  const isAlreadyRegistered = registrationStatus?.isRegistered || event?.isRegistered;
-
+  const isAlreadyRegistered = registrationStatus;
   useEffect(() => {
     if (eventId) {
       dispatch(fetchEventById(eventId));
       loadSupplemental();
     }
+    
   }, [eventId, dispatch]);
 
   if (loading && !event) {
@@ -238,8 +244,8 @@ const EventDetailPage = () => {
                   <div>
                     <div className="text-sm text-gray-400">Available Spots</div>
                     {hasCapacityLimit() ? (
-                      <div className={getAvailableSpots() <= 5 && getAvailableSpots() > 0 ? 'text-yellow-400' : isEventFull ? 'text-red-400' : 'text-green-400'}>
-                        {Math.max(0, getAvailableSpots())} / {event.maxParticipants}
+                      <div className={availableSpots[event.id] <= 5 && getAvailableSpots() > 0 ? 'text-yellow-400' : isEventFull ? 'text-red-400' : 'text-green-400'}>
+                        {Math.max(0, availableSpots[event.id])} / {event.maxParticipants}
                       </div>
                     ) : (
                       <div className="text-green-400">Unlimited spots</div>
@@ -394,20 +400,34 @@ const EventDetailPage = () => {
               <div className="bg-gray-800 rounded-lg p-6">
                 <h3 className="text-lg font-semibold text-white mb-4">Registration Form</h3>
                 <div className="text-gray-300 text-sm mb-3">
-                  <div className="font-medium">{activeForm.title}</div>
-                  {activeForm.deadline && (
-                    <div className="text-gray-400 mt-1">
-                      Deadline: {new Date(activeForm.deadline).toLocaleString()}
+                  {activeForm.map((responcemp, index) => (
+                    <div key={index} className="mb-4">
+                      {/* Title */}
+                      <div className="font-medium">{responcemp.title}</div>
+
+                      {/* Deadline */}
+                      {responcemp.deadline && (
+                        <div className="text-gray-400 mt-1">
+                          Deadline: {new Date(responcemp.deadline).toLocaleString()}
+                        </div>
+                      )}
+
+                      {/* Active / Inactive badge */}
+                      <div
+                        className={`px-3 py-1 rounded-full text-xs inline-block ${
+                          responcemp.isActive
+                            ? 'bg-green-500 bg-opacity-20 text-green-300'
+                            : 'bg-red-500 bg-opacity-20 text-red-300'
+                        }`}
+                      >
+                        {responcemp.isActive ? 'Active' : 'Inactive'}
+                      </div>
                     </div>
-                  )}
-                </div>
-                <div className={`px-3 py-1 rounded-full text-xs inline-block ${
-                  activeForm.isActive ? 'bg-green-500 bg-opacity-20 text-green-300' : 'bg-red-500 bg-opacity-20 text-red-300'
-                }`}>
-                  {activeForm.isActive ? 'Active' : 'Inactive'}
+                  ))}
                 </div>
               </div>
             )}
+
           </div>
         </div>
       </div>
@@ -424,22 +444,27 @@ const EventDetailPage = () => {
 
       {/* Form Builder Modal */}
       {showFormBuilder && (
-        <FormBuilder
-          eventId={eventId}
-          form={activeForm}
-          onFormSaved={() => {
-            setShowFormBuilder(false);
-            loadSupplemental();
-          }}
-          onClose={() => setShowFormBuilder(false)}
-        />
+        activeForm.map((response, index) => (
+          <FormBuilder
+            key={index} // always give a key when mapping in React
+            eventId={eventId}
+            form={response}
+            onFormSaved={() => {
+              setShowFormBuilder(false);
+              loadSupplemental();
+            }}
+            onClose={() => setShowFormBuilder(false)}
+          />
+        ))
+
+        
       )}
 
       {/* Submission editor for registered users */}
       {showSubmissionEditor && activeForm && (
         <DynamicFormSubmission
           eventId={eventId}
-          formId={activeForm.id}
+          formId={isAlreadyRegistered}
           existingSubmission={true}
           onSubmissionComplete={() => setShowSubmissionEditor(false)}
           onClose={() => setShowSubmissionEditor(false)}

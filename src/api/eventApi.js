@@ -66,6 +66,10 @@ const eventApi = {
     return apiClient.get(`${BASE_URL}/is-active/${eventId}`);
   },
 
+  getRegistrationId: async (eventId) => {
+    return apiClient.get(`${BASE_URL}/${eventId}/registration-id`);
+  },
+
   getRegistrationStatus: async (eventId) => {
     return apiClient.get(`${BASE_URL}/${eventId}/registration-status`);
   },

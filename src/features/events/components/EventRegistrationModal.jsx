@@ -84,20 +84,16 @@ const EventRegistrationModal = ({
       setRegistering(true);
       setError(null);
 
+
       const response = await eventApi.registerForEvent(eventId);
 
       // Try to download ticket
       try {
         const pdfResponse = await eventApi.downloadPdf(response.data.id);
         
-        // Handle direct PDF response from backend
-        let blob;
-        if (pdfResponse.data instanceof Blob) {
-          blob = pdfResponse.data;
-        } else {
-          // If response.data is not already a blob, create one
-          blob = new Blob([pdfResponse.data], { type: 'application/pdf' });
-        }
+        // Since backend returns byte[] and API uses responseType: 'blob', 
+        // response.data will be a Blob object
+        const blob = pdfResponse.data;
         
         const url = window.URL.createObjectURL(blob);
         
@@ -139,24 +135,21 @@ const EventRegistrationModal = ({
 
   const handleDownloadTicket = async () => {
     try {
-      if (registrationStatus && registrationStatus.id) {
-        const pdfResponse = await eventApi.downloadPdf(registrationStatus.id);
+      const registrationId = await eventApi.getRegistrationId(eventId);
+      
+      if (registrationId) {
+        const pdfResponse = await eventApi.downloadPdf(registrationId.data);
         
-        // Handle direct PDF response from backend
-        let blob;
-        if (pdfResponse.data instanceof Blob) {
-          blob = pdfResponse.data;
-        } else {
-          // If response.data is not already a blob, create one
-          blob = new Blob([pdfResponse.data], { type: 'application/pdf' });
-        }
+        // Since backend returns byte[] and API uses responseType: 'blob', 
+        // response.data will be a Blob object
+        const blob = pdfResponse.data;
         
         const url = window.URL.createObjectURL(blob);
         
         // Create a temporary download link
         const link = document.createElement('a');
         link.href = url;
-        link.download = `ticket-${registrationStatus.id}.pdf`;
+        link.download = `ticket-${registrationId.data}.pdf`;
         document.body.appendChild(link);
         link.click();
         
@@ -209,16 +202,9 @@ const EventRegistrationModal = ({
   };
 
   if (!show) return null;
-  {
-                console.log("sahgdhasgdyuasgdyasu ++++++++++++++++++++++++++++++" + showFormSubmission + "======" + selectedFormId )
-                
-              }
-
+  
   if (showFormSubmission && selectedFormId) {
-    {
-                console.log("sahgdhasgdyuasgdyasu ++++++++++++++++++++++++++++++")
-                
-              }
+    
     return (
       <DynamicFormSubmission
         eventId={eventId}
@@ -352,7 +338,7 @@ const EventRegistrationModal = ({
               </div>
               <div className="flex gap-2">
                 <button
-                  onClick={handleDownloadTicket}
+                  onClick={() => handleDownloadTicket()}
                   className="flex-1 py-2 px-4 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors duration-200 flex items-center justify-center gap-2"
                 >
                   <Download className="w-4 h-4" />

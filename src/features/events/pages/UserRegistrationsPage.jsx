@@ -30,13 +30,14 @@ const UserRegistrationsPage = () => {
     }
   };
 
-  const handleUnregister = async (eventId, eventTitle) => {
-    if (!window.confirm(`Are you sure you want to unregister from "${eventTitle}"?`)) {
+  const handleUnregister = async (eventId,  registrationId) => {
+    if (!window.confirm(`Are you sure you want to unregister from this event?`)) {
       return;
     }
 
     try {
-      await eventApi.unregisterFromEvent(eventId);
+      console.log(`Unregistering from event ${eventId} with registration ID ${registrationId}`);
+      await eventApi.deleteFormFromSubmission(eventId , registrationId);
       loadRegistrations(); // Reload the list
     } catch (error) {
       console.error('Error unregistering:', error);
@@ -46,16 +47,12 @@ const UserRegistrationsPage = () => {
 
   const handleDownloadTicket = async (registrationId) => {
     try {
+      
       const response = await eventApi.downloadPdf(registrationId);
       
-      // Handle direct PDF response from backend
-      let blob;
-      if (response.data instanceof Blob) {
-        blob = response.data;
-      } else {
-        // If response.data is not already a blob, create one
-        blob = new Blob([response.data], { type: 'application/pdf' });
-      }
+      // Since backend returns byte[] and API uses responseType: 'blob', 
+      // response.data will be a Blob object
+      const blob = response.data;
       
       const url = window.URL.createObjectURL(blob);
       
@@ -194,7 +191,7 @@ const UserRegistrationsPage = () => {
                     {/* Event Title and Status */}
                     <div className="flex justify-between items-start mb-4">
                       <h3 className="text-lg font-semibold text-white line-clamp-2">
-                        {registration.title}
+                        {registration.eventTitle}
                       </h3>
                       <span className={`text-xs px-2 py-1 rounded ${eventStatus.color} bg-opacity-20`}>
                         {eventStatus.label}
@@ -250,7 +247,7 @@ const UserRegistrationsPage = () => {
                         
                         {eventStatus.status === 'upcoming' && (
                           <button
-                            onClick={() => handleUnregister(registration.event.id, registration.event.title)}
+                            onClick={() => handleUnregister(registration.eventId, registration.id)}
                             className="flex items-center justify-center gap-2 px-3 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 flex-1"
                           >
                             <Trash2 className="w-4 h-4" />
@@ -266,6 +263,8 @@ const UserRegistrationsPage = () => {
           </div>
         )}
       </div>
+
+      
 
       {/* Form Edit Modal */}
       {showFormEdit && editingRegistration && (

@@ -150,14 +150,9 @@ const DynamicFormSubmission = ({ eventId, formId, existingSubmission, onSubmissi
         try {
           const pdfResponse = await eventApi.downloadPdf(response.data.id);
           
-          // Handle direct PDF response from backend
-          let blob;
-          if (pdfResponse.data instanceof Blob) {
-            blob = pdfResponse.data;
-          } else {
-            // If response.data is not already a blob, create one
-            blob = new Blob([pdfResponse.data], { type: 'application/pdf' });
-          }
+          // Since backend returns byte[] and API uses responseType: 'blob', 
+          // response.data will be a Blob object
+          const blob = pdfResponse.data;
           
           const url = window.URL.createObjectURL(blob);
           

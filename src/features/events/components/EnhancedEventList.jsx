@@ -128,14 +128,9 @@ const EnhancedEventList = ({
         const eventApi = await import('../../../api/eventApi');
         const response = await eventApi.default.downloadPdf(result.registration.id);
         
-        // Handle direct PDF response from backend
-        let blob;
-        if (response.data instanceof Blob) {
-          blob = response.data;
-        } else {
-          // If response.data is not already a blob, create one
-          blob = new Blob([response.data], { type: 'application/pdf' });
-        }
+        // Since backend returns byte[] and API uses responseType: 'blob', 
+        // response.data will be a Blob object
+        const blob = response.data;
         
         const url = window.URL.createObjectURL(blob);
         

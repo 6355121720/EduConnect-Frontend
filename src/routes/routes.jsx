@@ -21,7 +21,6 @@ import EnhancedEventsPage from '../features/events/pages/EnhancedEventsPage';
 import EventDetailPage from '../features/events/pages/EventDetailPage';
 import UserRegistrationsPage from '../features/events/pages/UserRegistrationsPage';
 import EventRegistrationsPage from '../features/events/pages/EventRegistrationsPage';
-import MyRegistrationsPage from '../features/events/pages/MyRegistrationsPage';
 
 const AppRouter = () => {
   return (
@@ -61,7 +60,6 @@ const AppRouter = () => {
               <Route path="/events/:eventId" element={<EventDetailPage />} />
               <Route path="/events/my-registrations" element={<UserRegistrationsPage />} />
               <Route path="/events/:eventId/registrations" element={<EventRegistrationsPage />} />
-              <Route path="/events/registrations" element={<MyRegistrationsPage />} />
             </Route>
             <Route path="/profile" element={<ProfilePage />} />
           </Route>
