@@ -445,13 +445,19 @@ const EventRegistrationModal = ({
                   </div>
                   
                   <div className="mt-6">
-                    <button
-                      onClick={() => handleFormRegistration(form.id)}
-                      className="w-full py-4 px-6 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white rounded-xl transition-all duration-200 flex items-center justify-center gap-3 font-bold text-lg shadow-lg hover:shadow-xl transform hover:scale-105"
-                    >
-                      <FileText className="w-5 h-5" />
-                      Start Registration Form
-                    </button>
+                    {form.formLimitEnabled ?(
+                      <div className="text-red-400 font-medium">
+                        This form has reached its submission limit and is no longer accepting new registrations.
+                      </div>
+                    ) : (
+                      <button
+                        onClick={() => handleFormRegistration(form.id)}
+                        className="w-full py-4 px-6 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white rounded-xl transition-all duration-200 flex items-center justify-center gap-3 font-bold text-lg shadow-lg hover:shadow-xl transform hover:scale-105"
+                      >
+                        <FileText className="w-5 h-5" />
+                        Start Registration Form
+                      </button>
+                    )}
                   </div>
                 </div>
               ))}
