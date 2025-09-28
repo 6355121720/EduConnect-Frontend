@@ -79,9 +79,9 @@ const eventApi = {
     return apiClient.post(`/register/${eventId}`);
   },
 
-  // unregisterFromEvent: async (eventId) => {
-  //   return apiClient.delete(`${BASE_URL}/${eventId}/unregister`);
-  // },
+  unregisterFromEvent: async (eventId) => {
+    return apiClient.delete(`${BASE_URL}/${eventId}/unregister`);
+  },
 
   getMyRegistrations: async () => {
     return apiClient.get(`${BASE_URL}/my-registrations`);
@@ -129,6 +129,10 @@ const eventApi = {
   },
 
   getActiveForm: async (eventId) => {
+    return apiClient.get(`${BASE_URL}/${eventId}/forms/active`);
+  },
+
+  getAllForms: async (eventId) => {
     return apiClient.get(`${BASE_URL}/${eventId}/forms/active`);
   },
 

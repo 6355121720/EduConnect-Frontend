@@ -3,6 +3,7 @@ import React from 'react';
 const FormPreview = ({ formData }) => {
   const renderField = (field) => {
     const baseInputClasses = "w-full px-3 py-2 bg-gray-600 text-white rounded-lg border border-gray-500 focus:outline-none focus:ring-2 focus:ring-purple-600";
+    const baseCheckboxClasses = "w-4 h-4 text-purple-600 bg-gray-600 border-gray-500 rounded focus:ring-purple-500";
     
     switch (field.type) {
       case 'TEXT':
@@ -38,22 +39,105 @@ const FormPreview = ({ formData }) => {
         );
       
       case 'DROPDOWN':
-        let options = [];
+        let dropdownOptions = [];
         try {
-          options = JSON.parse(field.options || '[]');
+          dropdownOptions = JSON.parse(field.options || '[]');
         } catch (e) {
-          options = [];
+          dropdownOptions = [];
         }
         
         return (
           <select className={baseInputClasses} disabled>
             <option value="">{field.placeholder || 'Select an option'}</option>
-            {options.map((option, index) => (
+            {dropdownOptions.map((option, index) => (
               <option key={index} value={option}>
                 {option}
               </option>
             ))}
           </select>
+        );
+      
+      case 'CHECKBOX':
+        let checkboxOptions = [];
+        try {
+          checkboxOptions = JSON.parse(field.options || '[]');
+        } catch (e) {
+          checkboxOptions = [];
+        }
+        
+        return (
+          <div className="space-y-2">
+            {checkboxOptions.map((option, index) => (
+              <div key={index} className="flex items-center gap-3">
+                <input
+                  type="checkbox"
+                  id={`checkbox-${field.id}-${index}`}
+                  className={baseCheckboxClasses}
+                  disabled
+                />
+                <label htmlFor={`checkbox-${field.id}-${index}`} className="text-gray-300 text-sm">
+                  {option}
+                </label>
+              </div>
+            ))}
+          </div>
+        );
+      
+      case 'TEXTAREA':
+        return (
+          <textarea
+            placeholder={field.placeholder}
+            rows={4}
+            className={baseInputClasses}
+            disabled
+          />
+        );
+      
+      case 'DATE':
+        return (
+          <input
+            type="date"
+            placeholder={field.placeholder}
+            className={baseInputClasses}
+            disabled
+          />
+        );
+      
+      case 'PHONE':
+        return (
+          <input
+            type="tel"
+            placeholder={field.placeholder || 'Enter your phone number'}
+            className={baseInputClasses}
+            disabled
+          />
+        );
+      
+      case 'RADIO':
+        let radioOptions = [];
+        try {
+          radioOptions = JSON.parse(field.options || '[]');
+        } catch (e) {
+          radioOptions = [];
+        }
+        
+        return (
+          <div className="space-y-2">
+            {radioOptions.map((option, index) => (
+              <div key={index} className="flex items-center gap-3">
+                <input
+                  type="radio"
+                  id={`radio-${field.id}-${index}`}
+                  name={`radio-${field.id}`}
+                  className={baseCheckboxClasses}
+                  disabled
+                />
+                <label htmlFor={`radio-${field.id}-${index}`} className="text-gray-300 text-sm">
+                  {option}
+                </label>
+              </div>
+            ))}
+          </div>
         );
       
       default:
@@ -88,8 +172,13 @@ const FormPreview = ({ formData }) => {
             Deadline: {new Date(formData.deadline).toLocaleString()}
           </div>
         )}
+        {formData.maxResponses && (
+          <div className="text-sm text-gray-400">
+            Max Responses: {formData.maxResponses}
+          </div>
+        )}
         {!formData.isActive && (
-          <div className="text-sm text-yellow-400">
+          <div className="text-sm text-yellow-400 mt-1">
             ⚠️ Form is currently inactive
           </div>
         )}
@@ -101,12 +190,12 @@ const FormPreview = ({ formData }) => {
           No fields added yet
         </div>
       ) : (
-        <div className="space-y-4">
+        <div className="space-y-6">
           {formData.fields
             .sort((a, b) => a.orderIndex - b.orderIndex)
             .map((field) => (
-            <div key={field.id} className="space-y-2">
-              <label className="block text-gray-300 text-sm">
+            <div key={field.id} className="space-y-3">
+              <label className="block text-gray-300 text-sm font-medium">
                 {field.label}
                 {field.required && <span className="text-red-400 ml-1">*</span>}
               </label>
@@ -114,7 +203,7 @@ const FormPreview = ({ formData }) => {
               {renderField(field)}
               
               {field.helpText && (
-                <div className="text-xs text-gray-400">
+                <div className="text-xs text-gray-400 mt-1">
                   {field.helpText}
                 </div>
               )}
@@ -122,14 +211,17 @@ const FormPreview = ({ formData }) => {
           ))}
           
           {/* Submit Button Preview */}
-          <div className="pt-4 border-t border-gray-600">
+          <div className="pt-4 border-t border-gray-600 mt-6">
             <button
               type="button"
-              className="w-full px-4 py-2 bg-purple-600 text-white rounded-lg opacity-50 cursor-not-allowed"
+              className="w-full px-4 py-3 bg-purple-600 text-white rounded-lg opacity-50 cursor-not-allowed font-medium hover:bg-purple-700 transition-colors"
               disabled
             >
               Submit Registration
             </button>
+            <p className="text-xs text-gray-400 text-center mt-2">
+              This is a preview. Submit button is disabled.
+            </p>
           </div>
         </div>
       )}

@@ -4,16 +4,18 @@ import eventApi from '../../api/eventApi';
 // Async thunks for API calls
 export const fetchEvents = createAsyncThunk(
   'events/fetchEvents',
-  async ({ page = 0, size = 20, sortBy = 'startDate', sortDirection = 'desc', searchQuery = '', filterType = 'all' }, { rejectWithValue }) => {
+  async ({ page = 0, size = 20, sortBy = 'startDate', sortDirection = 'desc', searchQuery = '', filterType = 'Upcoming', dateRange = null }, { rejectWithValue }) => {
     try {
       let response;
       
-      if (searchQuery) {
+      if (dateRange && dateRange.startDate && dateRange.endDate) {
+        response = await eventApi.getEventsByDateRange(dateRange.startDate, dateRange.endDate);
+      } else if (searchQuery) {
         response = await eventApi.searchEvents(searchQuery, page, size);
       } else {
         switch (filterType) {
-          case 'upcoming':
-            response = await eventApi.getUpcomingEvents();
+          case 'All':
+            response = await eventApi.getAllEvents(page, size, sortBy, sortDirection);
             break;
           case 'past':
             response = await eventApi.getPastEvents();
@@ -25,7 +27,7 @@ export const fetchEvents = createAsyncThunk(
             response = await eventApi.getMyCreatedEvents();
             break;
           default:
-            response = await eventApi.getAllEvents(page, size, sortBy, sortDirection);
+            response = await eventApi.getUpcomingEvents();
         }
       }
       
@@ -35,7 +37,8 @@ export const fetchEvents = createAsyncThunk(
         totalElements: response.data.totalElements || response.data.length,
         currentPage: page,
         filterType,
-        searchQuery
+        searchQuery,
+        dateRange
       };
     } catch (error) {
       return rejectWithValue(error.response?.data?.message || 'Failed to fetch events');
@@ -169,9 +172,12 @@ const initialState = {
   // Available spots for events
   availableSpots: {},
   
+  // Registration status for events
+  registrationStatus: {},
+  
   // Search and filters
   searchQuery: '',
-  filterType: 'all',
+  filterType: 'upcoming', // 'All', 'past', 'popular', 'my-created'
   sortBy: 'startDate',
   sortDirection: 'desc',
   
