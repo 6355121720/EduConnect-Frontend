@@ -147,7 +147,7 @@ const EnhancedEventList = ({
         }));
         // Update available spots for all events
         dispatch(fetchAvailableSpots(events.map(event => event.id)));
-        
+
         return;
       }catch(error){
         console.error('Error unregistering from event:', error);
@@ -613,13 +613,17 @@ const EnhancedEventList = ({
                     ) : (
                       /* Participant Actions */
                       <div className="flex gap-2 flex-1">
-                        {isRegistered ? (
+                        {isRegistered  ? (
                           <>
-                            <button
+
+                            {isRegistered != -1 ? (
+                                <button
                               onClick={async () => {
                                 try {
                                   const { default: eventApi } = await import('../../../api/eventApi');
                                   const formRes = await eventApi.getRegistrationStatus(event.id);
+                                  
+                                  
                                   setSubmissionModal({ show: true, eventId: event.id, formId: formRes.data });
                                 } catch (e) {
                                   console.error('No active form or failed to load:', e);
@@ -630,6 +634,10 @@ const EnhancedEventList = ({
                             >
                               My Response
                             </button>
+                            ) : null
+
+                            }
+                            
                             <button
                               onClick={() => handleUnregister(event.id, isRegistered)}
                               className="px-4 py-2.5 bg-red-600 hover:bg-red-700 text-white rounded-xl transition-colors text-sm font-medium"

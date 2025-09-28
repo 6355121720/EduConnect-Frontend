@@ -41,14 +41,18 @@ const EventRegistrationsPage = () => {
       const eventResponse = await eventApi.getEventById(eventId);
       setEvent(eventResponse.data);
       
-      // Load registrations
-      const registrationsResponse = await eventApi.getEventRegistrationsList(
-        eventId, 
-        currentPage, 
-        20
-      );
-      setRegistrations(registrationsResponse.data.content || registrationsResponse.data);
-      setTotalPages(registrationsResponse.data.totalPages || 1);
+      // Load registrations with new API structure
+      const registrationsResponse = await eventApi.getEventRegistrations(eventId);
+      const registrationData = registrationsResponse.data;
+      
+      // Handle the new API response structure
+      if (registrationData && registrationData.registrations) {
+        setRegistrations(registrationData.registrations);
+        setTotalPages(Math.ceil(registrationData.registrations.length / 20) || 1);
+      } else {
+        setRegistrations([]);
+        setTotalPages(1);
+      }
       
     } catch (error) {
       console.error('Error loading data:', error);
@@ -61,42 +65,19 @@ const EventRegistrationsPage = () => {
   const exportToCSV = () => {
     if (registrations.length === 0) return;
 
-    // Create CSV headers
-    const headers = ['Name', 'Email', 'Registration Date', 'Status'];
-    
-    // Check if any registration has form responses
-    const hasFormResponses = registrations.some(reg => reg.formResponses && reg.formResponses.length > 0);
-    if (hasFormResponses) {
-      // Get all unique form field labels
-      const formFields = new Set();
-      registrations.forEach(reg => {
-        if (reg.formResponses) {
-          reg.formResponses.forEach(response => {
-            formFields.add(response.fieldLabel);
-          });
-        }
-      });
-      headers.push(...Array.from(formFields));
-    }
+    // Create CSV headers based on new data structure
+    const headers = ['Full Name', 'Email', 'User ID', 'Avatar URL'];
 
     // Create CSV rows
     const csvRows = [headers.join(',')];
     
     registrations.forEach(registration => {
       const row = [
-        `"${registration.user?.name || 'N/A'}"`,
-        `"${registration.user?.email || 'N/A'}"`,
-        `"${new Date(registration.registrationDate).toLocaleDateString()}"`,
-        `"${registration.status || 'ACTIVE'}"`
+        `"${registration.userFullName || 'N/A'}"`,
+        `"${registration.userEmail || 'N/A'}"`,
+        `"${registration.userId || 'N/A'}"`,
+        `"${registration.avtarUrl || 'N/A'}"`
       ];
-      
-      if (hasFormResponses) {
-        const formFieldsArray = Array.from(formFields);
-        formFieldsArray.forEach(fieldLabel => {
-          const response = registration.formResponses?.find(r => r.fieldLabel === fieldLabel);
-          row.push(`"${response?.value || ''}"`);
-        });
-      }
       
       csvRows.push(row.join(','));
     });
@@ -107,7 +88,7 @@ const EventRegistrationsPage = () => {
     const url = window.URL.createObjectURL(blob);
     const link = document.createElement('a');
     link.href = url;
-    link.download = `${event?.title}_registrations.csv`;
+    link.download = `${event?.title || 'Event'}_registrations.csv`;
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
@@ -127,12 +108,8 @@ const EventRegistrationsPage = () => {
   const filteredRegistrations = registrations.filter(registration => {
     const searchLower = searchQuery.toLowerCase();
     const matchesSearch = 
-      registration.user?.name?.toLowerCase().includes(searchLower) ||
-      registration.user?.email?.toLowerCase().includes(searchLower);
-    
-    if (filterType === 'all') return matchesSearch;
-    if (filterType === 'with-forms') return matchesSearch && registration.formResponses?.length > 0;
-    if (filterType === 'simple') return matchesSearch && (!registration.formResponses || registration.formResponses.length === 0);
+      registration.userFullName?.toLowerCase().includes(searchLower) ||
+      registration.userEmail?.toLowerCase().includes(searchLower);
     
     return matchesSearch;
   });
@@ -195,7 +172,7 @@ const EventRegistrationsPage = () => {
               <div>
                 <p className="text-gray-400 text-sm">Available Spots</p>
                 <p className="text-2xl font-bold text-white">
-                  {event ? event.maxParticipants - registrations.length : 0}
+                  {event && event.maxParticipants ? Math.max(0, event.maxParticipants - registrations.length) : '∞'}
                 </p>
               </div>
               <Calendar className="w-8 h-8 text-green-400" />
@@ -205,9 +182,9 @@ const EventRegistrationsPage = () => {
           <div className="bg-gray-800 rounded-lg p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-gray-400 text-sm">Capacity</p>
+                <p className="text-gray-400 text-sm">Capacity Filled</p>
                 <p className="text-2xl font-bold text-white">
-                  {event ? Math.round((registrations.length / event.maxParticipants) * 100) : 0}%
+                  {event && event.maxParticipants ? Math.round((registrations.length / event.maxParticipants) * 100) : 0}%
                 </p>
               </div>
               <FileText className="w-8 h-8 text-blue-400" />
@@ -217,9 +194,9 @@ const EventRegistrationsPage = () => {
           <div className="bg-gray-800 rounded-lg p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-gray-400 text-sm">Form Submissions</p>
-                <p className="text-2xl font-bold text-white">
-                  {registrations.filter(r => r.formResponses?.length > 0).length}
+                <p className="text-gray-400 text-sm">Event Date</p>
+                <p className="text-lg font-bold text-white">
+                  {event ? new Date(event.startDate).toLocaleDateString() : 'N/A'}
                 </p>
               </div>
               <FileText className="w-8 h-8 text-yellow-400" />
@@ -243,16 +220,13 @@ const EventRegistrationsPage = () => {
                 />
               </div>
               
-              {/* Filter */}
-              <select
-                value={filterType}
-                onChange={(e) => setFilterType(e.target.value)}
-                className="px-4 py-2 bg-gray-700 text-white rounded-lg border border-gray-600 focus:border-purple-500 focus:outline-none"
-              >
-                <option value="all">All Registrations</option>
-                <option value="with-forms">With Form Responses</option>
-                <option value="simple">Simple Registrations</option>
-              </select>
+              {/* Registration Count */}
+              <div className="flex items-center gap-2 px-4 py-2 bg-gray-700 text-white rounded-lg border border-gray-600">
+                <Users className="w-4 h-4 text-gray-400" />
+                <span className="text-sm">
+                  {filteredRegistrations.length} of {registrations.length} registrations
+                </span>
+              </div>
             </div>
             
             {/* Export Button */}
@@ -282,13 +256,13 @@ const EventRegistrationsPage = () => {
                       Participant
                     </th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
-                      Contact
+                      Contact & ID
                     </th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
                       Registration Date
                     </th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
-                      Type
+                      Status
                     </th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
                       Actions
@@ -297,18 +271,36 @@ const EventRegistrationsPage = () => {
                 </thead>
                 <tbody className="divide-y divide-gray-700">
                   {filteredRegistrations.map((registration, index) => (
-                    <tr key={registration.id} className="hover:bg-gray-700">
+                    <tr key={registration.userId} className="hover:bg-gray-700">
                       <td className="px-6 py-4 whitespace-nowrap">
                         <div className="flex items-center">
-                          <div className="w-10 h-10 rounded-full bg-purple-600 flex items-center justify-center text-white font-medium">
-                            {registration.user?.name?.charAt(0)?.toUpperCase() || 'U'}
+                          <div className="w-10 h-10 rounded-full overflow-hidden bg-purple-600 flex items-center justify-center">
+                            {registration.avtarUrl ? (
+                              <img
+                                src={registration.avtarUrl}
+                                alt={registration.userFullName}
+                                className="w-full h-full object-cover"
+                                onError={(e) => {
+                                  e.target.style.display = 'none';
+                                  e.target.parentElement.innerHTML = `
+                                    <div class="w-full h-full bg-purple-600 flex items-center justify-center text-white font-medium">
+                                      ${registration.userFullName.charAt(0).toUpperCase()}
+                                    </div>
+                                  `;
+                                }}
+                              />
+                            ) : (
+                              <div className="w-full h-full bg-purple-600 flex items-center justify-center text-white font-medium">
+                                {registration.userFullName.charAt(0).toUpperCase()}
+                              </div>
+                            )}
                           </div>
                           <div className="ml-4">
                             <div className="text-sm font-medium text-white">
-                              {registration.user?.name || 'Unknown User'}
+                              {registration.userFullName}
                             </div>
                             <div className="text-sm text-gray-400">
-                              #{registration.id}
+                              Registration #{index + 1}
                             </div>
                           </div>
                         </div>
@@ -317,40 +309,33 @@ const EventRegistrationsPage = () => {
                         <div className="text-sm text-gray-300">
                           <div className="flex items-center gap-2 mb-1">
                             <Mail className="w-4 h-4 text-gray-400" />
-                            {registration.user?.email || 'N/A'}
+                            <a 
+                              href={`mailto:${registration.userEmail}`}
+                              className="hover:text-blue-400 transition-colors"
+                            >
+                              {registration.userEmail}
+                            </a>
                           </div>
-                          {registration.user?.phone && (
-                            <div className="flex items-center gap-2">
-                              <Phone className="w-4 h-4 text-gray-400" />
-                              {registration.user.phone}
-                            </div>
-                          )}
+                          <div className="text-xs text-gray-500 font-mono">
+                            ID: {registration.userId}
+                          </div>
                         </div>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-300">
-                        {formatDate(registration.registrationDate)}
+                        {new Date().toLocaleDateString()}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
-                        <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
-                          registration.formResponses?.length > 0 
-                            ? 'bg-blue-100 text-blue-800' 
-                            : 'bg-gray-100 text-gray-800'
-                        }`}>
-                          {registration.formResponses?.length > 0 ? 'Form-based' : 'Simple'}
+                        <span className="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-green-100 text-green-800">
+                          Registered
                         </span>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                         <div className="flex gap-2">
-                          {registration.formResponses?.length > 0 && (
-                            <button className="text-blue-400 hover:text-blue-300">
-                              View Form
-                            </button>
-                          )}
                           <button
-                            onClick={() => {/* Handle download ticket */}}
-                            className="text-green-400 hover:text-green-300"
+                            onClick={() => window.open(`mailto:${registration.userEmail}`, '_blank')}
+                            className="text-blue-400 hover:text-blue-300"
                           >
-                            Download Ticket
+                            Contact
                           </button>
                         </div>
                       </td>

@@ -36,6 +36,9 @@ const EditEventPage = () => {
     attachmentUrl: ''
   });
   
+  const [bannerFile, setBannerFile] = useState(null);
+  const [bannerPreview, setBannerPreview] = useState(null);
+  
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState(null);
@@ -111,6 +114,29 @@ const EditEventPage = () => {
     if (success) setSuccess(false);
   };
 
+  const handleBannerFileChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      setBannerFile(file);
+      
+      // Create preview URL
+      const previewUrl = URL.createObjectURL(file);
+      setBannerPreview(previewUrl);
+      
+      // Clear success message when user changes file
+      if (success) setSuccess(false);
+    }
+  };
+
+  // Cleanup banner preview URL on unmount
+  useEffect(() => {
+    return () => {
+      if (bannerPreview) {
+        URL.revokeObjectURL(bannerPreview);
+      }
+    };
+  }, [bannerPreview]);
+
   const validateForm = () => {
     const errors = [];
     
@@ -159,7 +185,7 @@ const EditEventPage = () => {
         maxParticipants: formData.maxParticipants ? parseInt(formData.maxParticipants) : null
       };
       
-      await eventApi.updateEvent(eventId, updateData);
+      await eventApi.updateEvent(eventId, updateData, bannerFile);
       setSuccess(true);
       
       // Redirect to event detail page after successful update
@@ -393,16 +419,42 @@ const EditEventPage = () => {
               {/* Banner URL */}
               <div>
                 <label className="block text-sm font-semibold text-gray-300 mb-2">
-                  Banner Image URL
+                  Banner Image
                 </label>
+                
+                {/* Current banner preview */}
+                {formData.bannerUrl && !bannerPreview && (
+                  <div className="mb-3">
+                    <p className="text-gray-400 text-sm mb-2">Current Banner:</p>
+                    <img
+                      src={formData.bannerUrl}
+                      alt="Current banner"
+                      className="w-full h-32 object-cover rounded-lg border border-gray-600"
+                    />
+                  </div>
+                )}
+                
+                {/* New banner preview */}
+                {bannerPreview && (
+                  <div className="mb-3">
+                    <p className="text-gray-400 text-sm mb-2">New Banner Preview:</p>
+                    <img
+                      src={bannerPreview}
+                      alt="New banner preview"
+                      className="w-full h-32 object-cover rounded-lg border border-gray-600"
+                    />
+                  </div>
+                )}
+                
                 <input
-                  type="url"
-                  name="bannerUrl"
-                  value={formData.bannerUrl}
-                  onChange={handleChange}
-                  placeholder="https://example.com/banner.jpg"
-                  className="w-full px-4 py-3 bg-gray-700/50 border border-gray-600/50 rounded-xl text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all"
+                  type="file"
+                  accept="image/*"
+                  onChange={handleBannerFileChange}
+                  className="w-full px-4 py-3 bg-gray-700/50 border border-gray-600/50 rounded-xl text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-green-600 file:text-white hover:file:bg-green-700"
                 />
+                <p className="text-gray-400 text-sm mt-1">
+                  Choose a new banner image to replace the current one, or leave empty to keep existing banner.
+                </p>
               </div>
 
               {/* Attachment URL */}

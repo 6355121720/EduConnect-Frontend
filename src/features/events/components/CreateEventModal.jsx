@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import eventApi from '../../../api/eventApi';
 import { Universities } from "../../../constants/enums";
 import { ChevronDown, Calendar, MapPin, Users, Image, FileText } from 'lucide-react';
@@ -17,7 +17,18 @@ const CreateEventModal = ({ show, onClose, onEventCreated }) => {
     university: '',
     maxParticipants: 1
   });
+  const [bannerFile, setBannerFile] = useState(null);
+  const [bannerPreview, setBannerPreview] = useState(null);
   const [showFormBuilder, setShowFormBuilder] = useState(false);
+
+  // Cleanup banner preview URL on unmount
+  useEffect(() => {
+    return () => {
+      if (bannerPreview) {
+        URL.revokeObjectURL(bannerPreview);
+      }
+    };
+  }, [bannerPreview]);
   const [createdEvent, setCreatedEvent] = useState(null);
   const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState({});
@@ -35,6 +46,31 @@ const CreateEventModal = ({ show, onClose, onEventCreated }) => {
         ...prev,
         [name]: null
       }));
+    }
+  };
+
+  const handleBannerFileChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      setBannerFile(file);
+      
+      // Create preview URL
+      const previewUrl = URL.createObjectURL(file);
+      setBannerPreview(previewUrl);
+      
+      // Clear any banner URL since we're using file upload
+      setFormData(prev => ({
+        ...prev,
+        bannerUrl: ''
+      }));
+      
+      // Clear file error
+      if (errors.bannerFile) {
+        setErrors(prev => ({
+          ...prev,
+          bannerFile: null
+        }));
+      }
     }
   };
 
@@ -102,7 +138,7 @@ const CreateEventModal = ({ show, onClose, onEventCreated }) => {
         maxParticipants: parseInt(formData.maxParticipants)
       };
       
-      const response = await eventApi.createEvent(eventData);
+      const response = await eventApi.createEvent(eventData, bannerFile);
       setCreatedEvent(response.data);
       
       // Ask if user wants to create a registration form
@@ -319,18 +355,26 @@ const CreateEventModal = ({ show, onClose, onEventCreated }) => {
             </h3>
             
             <div>
-              <label className="block text-gray-400 mb-2">Banner Image URL</label>
+              <label className="block text-gray-400 mb-2">Banner Image</label>
               <input
-                type="url"
-                name="bannerUrl"
-                value={formData.bannerUrl}
-                onChange={handleChange}
+                type="file"
+                accept="image/*"
+                onChange={handleBannerFileChange}
                 className={`w-full px-3 py-2 bg-gray-700 text-white rounded-lg focus:outline-none focus:ring-2 ${
-                  errors.bannerUrl ? 'border border-red-500 focus:ring-red-500' : 'focus:ring-purple-600'
-                }`}
-                placeholder="https://example.com/banner.jpg"
+                  errors.bannerFile ? 'border border-red-500 focus:ring-red-500' : 'focus:ring-purple-600'
+                } file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-purple-600 file:text-white hover:file:bg-purple-700`}
               />
-              {errors.bannerUrl && <div className="text-red-400 text-sm mt-1">{errors.bannerUrl}</div>}
+              {errors.bannerFile && <div className="text-red-400 text-sm mt-1">{errors.bannerFile}</div>}
+              {bannerPreview && (
+                <div className="mt-3">
+                  <p className="text-gray-400 text-sm mb-2">Preview:</p>
+                  <img
+                    src={bannerPreview}
+                    alt="Banner preview"
+                    className="w-full h-32 object-cover rounded-lg border border-gray-600"
+                  />
+                </div>
+              )}
             </div>
             
             <div>

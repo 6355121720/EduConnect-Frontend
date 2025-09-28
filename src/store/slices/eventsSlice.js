@@ -60,9 +60,9 @@ export const fetchEventById = createAsyncThunk(
 
 export const createEvent = createAsyncThunk(
   'events/createEvent',
-  async (eventData, { rejectWithValue }) => {
+  async ({ eventData, bannerFile }, { rejectWithValue }) => {
     try {
-      const response = await eventApi.createEvent(eventData);
+      const response = await eventApi.createEvent(eventData, bannerFile);
       return response.data;
     } catch (error) {
       return rejectWithValue(error.response?.data?.message || 'Failed to create event');
@@ -72,9 +72,9 @@ export const createEvent = createAsyncThunk(
 
 export const updateEvent = createAsyncThunk(
   'events/updateEvent',
-  async ({ id, eventData }, { rejectWithValue }) => {
+  async ({ id, eventData, bannerFile }, { rejectWithValue }) => {
     try {
-      const response = await eventApi.updateEvent(id, eventData);
+      const response = await eventApi.updateEvent(id, eventData, bannerFile);
       return response.data;
     } catch (error) {
       return rejectWithValue(error.response?.data?.message || 'Failed to update event');

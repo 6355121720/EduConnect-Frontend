@@ -38,12 +38,52 @@ const eventApi = {
     return apiClient.get(`${BASE_URL}/my-created`);
   },
 
-  createEvent: async (eventData) => {
-    return apiClient.post(`${BASE_URL}/`, eventData);
+  createEvent: async (eventData, bannerFile) => {
+    const formData = new FormData();
+    
+    // Create event object without the banner file
+    const eventForBackend = { ...eventData };
+    delete eventForBackend.bannerFile; // Remove if it exists
+    
+    // Add event data as JSON string (for @RequestPart("Event"))
+    formData.append('Event', new Blob([JSON.stringify(eventForBackend)], {
+      type: 'application/json'
+    }));
+    
+    // Add banner file (for @RequestPart("file"))
+    if (bannerFile) {
+      formData.append('file', bannerFile);
+    }
+    
+    return apiClient.post(`${BASE_URL}/`, formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data'
+      }
+    });
   },
 
-  updateEvent: async (id, eventData) => {
-    return apiClient.put(`${BASE_URL}/${id}`, eventData);
+  updateEvent: async (id, eventData, bannerFile) => {
+    const formData = new FormData();
+    
+    // Create event object without the banner file
+    const eventForBackend = { ...eventData };
+    delete eventForBackend.bannerFile; // Remove if it exists
+    
+    // Add event data as JSON string (for @RequestPart("Event"))
+    formData.append('Event', new Blob([JSON.stringify(eventForBackend)], {
+      type: 'application/json'
+    }));
+    
+    // Add banner file (for @RequestPart("file"))
+    if (bannerFile) {
+      formData.append('file', bannerFile);
+    }
+    
+    return apiClient.put(`${BASE_URL}/${id}`, formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data'
+      }
+    });
   },
 
   deleteEvent: async (id) => {
@@ -88,7 +128,7 @@ const eventApi = {
   },
 
   getEventRegistrations: async (eventId) => {
-    return apiClient.get(`${BASE_URL}/${eventId}/registrations`);
+    return apiClient.get(`${BASE_URL}/view/${eventId}/registrations`);
   },
 
   // Additional endpoints
