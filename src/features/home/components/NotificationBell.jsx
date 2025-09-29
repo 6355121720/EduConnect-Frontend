@@ -3,7 +3,7 @@ import { Bell } from 'lucide-react';
 import { useDispatch, useSelector } from 'react-redux';
 import notificationsApi from '../../../api/notificationsApi';
 import SocketService from '../../../services/SocketService';
-import { fetchNotifications, fetchUnreadCount, addOrMerge, markAllRead } from '../../../store/slices/notificationsSlice';
+import { fetchNotifications, fetchUnreadCount,markAllSeen , addOrMerge, markAllRead } from '../../../store/slices/notificationsSlice';
 
 export default function NotificationBell() {
   const dispatch = useDispatch();
@@ -40,7 +40,7 @@ export default function NotificationBell() {
 
   const handleMarkAllSeen = async () => {
     try {
-      await notificationsApi.markAllSeen();
+      dispatch(markAllSeen());
       dispatch(markAllRead());
       dispatch(fetchUnreadCount());
     } catch (e) {

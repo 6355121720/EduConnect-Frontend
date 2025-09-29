@@ -17,8 +17,11 @@ import QuestionPage from '../features/qconnect/pages/QuestionPage';
 import QConnectPage from '../features/qconnect/pages/QConnectPage';
 import PostQuestion from '../features/qconnect/pages/PostQuestion';
 import MyQuestionPage from '../features/qconnect/pages/MyQuestions';
-import EventsPage from '../features/events/pages/EventsPageNew';
-import MyRegistrationsPage from '../features/events/pages/MyRegistrationsPage';
+import EnhancedEventsPage from '../features/events/pages/EnhancedEventsPage';
+import EventDetailPage from '../features/events/pages/EventDetailPage';
+import EditEventPage from '../features/events/pages/EditEventPage';
+import UserRegistrationsPage from '../features/events/pages/UserRegistrationsPage';
+import EventRegistrationsPage from '../features/events/pages/EventRegistrationsPage';
 
 const AppRouter = () => {
   return (
@@ -54,8 +57,11 @@ const AppRouter = () => {
               <Route path="/qconnect/myquestion" element={<MyQuestionPage />} /> 
             </Route>
             <Route path="/events" element={<Outlet />}>
-              <Route index element={<EventsPage />} />
-              <Route path="/events/registrations" element={<MyRegistrationsPage />} />
+              <Route index element={<EnhancedEventsPage />} />
+              <Route path="/events/:eventId" element={<EventDetailPage />} />
+              <Route path="/events/:eventId/edit" element={<EditEventPage />} />
+              <Route path="/events/my-registrations" element={<UserRegistrationsPage />} />
+              <Route path="/events/:eventId/registrations" element={<EventRegistrationsPage />} />
             </Route>
             <Route path="/profile" element={<ProfilePage />} />
           </Route>

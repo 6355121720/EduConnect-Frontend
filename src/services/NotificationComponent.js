@@ -21,9 +21,9 @@ const NotificationComponent = () => {
     };
   }, []);
 
-  return (
-    // Your component JSX
-  );
+  // return (
+  //   // Your component JSX
+  // );
 };
 
 export default NotificationComponent;

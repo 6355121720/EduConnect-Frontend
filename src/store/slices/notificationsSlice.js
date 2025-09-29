@@ -28,6 +28,18 @@ export const fetchUnreadCount = createAsyncThunk(
   }
 );
 
+export const markAllSeen = createAsyncThunk(
+  'notifications/markAllSeen',
+  async (_, { rejectWithValue }) => {
+    try {
+      const res = await notificationsApi.markAllSeen();
+      return res.data;
+    } catch (err) {
+      return rejectWithValue(err.response?.data || { message: err.message });
+    }
+  }
+);
+
 const initialState = {
   byId: {},
   order: [], // newest first
@@ -106,7 +118,11 @@ const notificationsSlice = createSlice({
         // backend returns number directly or in a response object
         s.unreadCount = typeof payload === 'number' ? payload : payload?.count ?? s.unreadCount;
       })
-      .addCase(fetchUnreadCount.rejected, (s) => { /* ignore */ });
+      .addCase(fetchUnreadCount.rejected, (s) => { /* ignore */ })
+      .addCase(markAllSeen.fulfilled, (s) => {
+        s.unreadCount = 0;
+      })
+      .addCase(markAllSeen.rejected, (s) => { /* ignore */ });
   },
 });
 
