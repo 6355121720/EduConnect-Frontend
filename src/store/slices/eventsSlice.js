@@ -18,16 +18,16 @@ export const fetchEvents = createAsyncThunk(
             response = await eventApi.getAllEvents(page, size, sortBy, sortDirection);
             break;
           case 'past':
-            response = await eventApi.getPastEvents();
+            response = await eventApi.getPastEvents(page, size, sortBy, sortDirection);
             break;
           case 'popular':
-            response = await eventApi.getPopularEvents();
+            response = await eventApi.getPopularEvents(page, size, sortBy, sortDirection);
             break;
           case 'my-created':
-            response = await eventApi.getMyCreatedEvents();
+            response = await eventApi.getMyCreatedEvents(page, size, sortBy, sortDirection);
             break;
           default:
-            response = await eventApi.getUpcomingEvents();
+            response = await eventApi.getUpcomingEvents(page, size, sortBy, sortDirection);
         }
       }
       
