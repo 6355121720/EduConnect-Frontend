@@ -69,7 +69,7 @@ const EnhancedEventsPage = () => {
     
     setLocalSearchQuery('');
     dispatch(setSearchQuery(''));
-    dispatch(setFilterType('all'));
+    dispatch(setFilterType('upcoming'));
     setDateRange({ startDate: '', endDate: '' });
   };
 
@@ -285,13 +285,13 @@ const EnhancedEventsPage = () => {
                         </button>
                       </div>
                     )}
-                    
-                    {filterType !== 'all' && filterType !== 'date-range' && (
+
+                    {filterType !== 'upcoming' && filterType !== 'date-range' && (
                       <div className="flex items-center bg-blue-600/20 text-blue-300 px-3 py-2 rounded-full text-sm border border-blue-500/30">
                         <Sparkles className="w-3 h-3 mr-1" />
                         <span>{filterOptions.find(f => f.value === filterType)?.label}</span>
                         <button 
-                          onClick={() => handleFilterChange('all')}
+                          onClick={() => handleFilterChange('upcoming')}
                           className="ml-2 text-blue-400 hover:text-blue-200 transition-colors"
                         >
                           <X className="w-3 h-3" />

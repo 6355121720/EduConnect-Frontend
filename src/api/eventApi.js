@@ -18,24 +18,28 @@ const eventApi = {
     return apiClient.get(`${BASE_URL}/search`, { params: { keyWord: keyword, page, size } });
   },
 
-  getUpcomingEvents: async () => {
-    return apiClient.get(`${BASE_URL}/upcoming`);
+  getUpcomingEvents: async (page = 0, size = 20, sortBy = 'date', sortDirection = 'desc') => {
+    return apiClient.get(`${BASE_URL}/upcoming`, {
+      params: { page, size, sortBy, sortDirection }
+    });
   },
 
-  getPastEvents: async () => {
-    return apiClient.get(`${BASE_URL}/past`);
+  getPastEvents: async (page = 0, size = 20, sortBy = 'date', sortDirection = 'desc') => {
+    return apiClient.get(`${BASE_URL}/past`, {
+      params: { page, size, sortBy, sortDirection }
+    });
   },
 
   getEventsByDateRange: async (startDate, endDate) => {
-    return apiClient.get(`${BASE_URL}/dateRange`, { params: { startDate, endDate } });
+    return apiClient.get(`${BASE_URL}/dateRange`, { params: { startDate, endDate} });
   },
 
-  getPopularEvents: async (limit = 10) => {
-    return apiClient.get(`${BASE_URL}/popular`, { params: { limit } });
+  getPopularEvents: async (page = 0, size = 20, sortBy = 'date', sortDirection = 'desc') => {
+    return apiClient.get(`${BASE_URL}/popular`, { params: { page, size, sortBy, sortDirection } });
   },
 
-  getMyCreatedEvents: async () => {
-    return apiClient.get(`${BASE_URL}/my-created`);
+  getMyCreatedEvents: async (page = 0, size = 20, sortBy = 'date', sortDirection = 'desc') => {
+    return apiClient.get(`${BASE_URL}/my-created`, { params: { page, size, sortBy, sortDirection } });
   },
 
   createEvent: async (eventData, bannerFile) => {

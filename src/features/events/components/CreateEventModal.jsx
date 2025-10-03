@@ -17,6 +17,10 @@ const CreateEventModal = ({ show, onClose, onEventCreated }) => {
     university: '',
     maxParticipants: 1
   });
+
+
+  const [shareEventData, setShareEventData] = useState(null);
+  const [shareBannerFile, setShareBannerFile] = useState(null);
   const [bannerFile, setBannerFile] = useState(null);
   const [bannerPreview, setBannerPreview] = useState(null);
   const [showFormBuilder, setShowFormBuilder] = useState(false);
@@ -138,13 +142,15 @@ const CreateEventModal = ({ show, onClose, onEventCreated }) => {
         maxParticipants: parseInt(formData.maxParticipants)
       };
       
-      const response = await eventApi.createEvent(eventData, bannerFile);
-      setCreatedEvent(response.data);
-      
       // Ask if user wants to create a registration form
-      if (window.confirm('Event created successfully! Would you like to create a registration form for this event?')) {
+      if (window.confirm('Would you like to create a registration form for this event? Both the event and form will be created together.')) {
+        setShareEventData(eventData);
+        setShareBannerFile(bannerFile);
+
         setShowFormBuilder(true);
       } else {
+        const response = await eventApi.createEvent(eventData, bannerFile);
+        setCreatedEvent(response.data);
         onEventCreated(response.data);
         onClose();
       }
@@ -158,20 +164,20 @@ const CreateEventModal = ({ show, onClose, onEventCreated }) => {
 
   const handleFormCreated = (formData) => {
     setShowFormBuilder(false);
-    onEventCreated(createdEvent);
     onClose();
   };
 
   if (!show) return null;
 
-  if (showFormBuilder && createdEvent) {
+  if (showFormBuilder) {
     return (
       <FormBuilder
-        eventId={createdEvent.id}
+        shareBannerFile={shareBannerFile}
+        shareEventData={shareEventData}
         onFormSaved={handleFormCreated}
+        onEventCreated={onEventCreated}
         onClose={() => {
           setShowFormBuilder(false);
-          onEventCreated(createdEvent);
           onClose();
         }}
       />

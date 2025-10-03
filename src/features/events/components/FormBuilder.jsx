@@ -16,7 +16,7 @@ const FIELD_TYPES = [
   { id: 'RADIO', label: 'Radio', icon: '🔘', description: 'Single selection', color: 'from-pink-500 to-rose-500' }
 ];
 
-const FormBuilder = ({ eventId, form, onFormSaved, onClose }) => {
+const FormBuilder = ({ eventId, form, onFormSaved, onClose ,shareEventData , shareBannerFile , onEventCreated }) => {
   const [formData, setFormData] = useState({
     title: '',
     deadline: '',
@@ -164,6 +164,18 @@ const FormBuilder = ({ eventId, form, onFormSaved, onClose }) => {
     }
   };
 
+
+  const createEvent = async (bannerFile, eventData) => {
+    try {
+      const response = await eventApi.createEvent(eventData, bannerFile);
+      onEventCreated(response.data);
+      return response.data;
+    } catch (error) {
+      console.error('Error creating event:', error);
+      throw error;
+    }
+  };
+
   const handleSubmit = async (e) => {
   e.preventDefault();
   setLoading(true);
@@ -206,13 +218,16 @@ const FormBuilder = ({ eventId, form, onFormSaved, onClose }) => {
       }))
     };
 
-    console.log('Sending to backend:', JSON.stringify(apiFormData, null, 2));
+    // console.log('Sending to backend:', JSON.stringify(apiFormData, null, 2));
 
     let response;
     if (form?.id) {
       response = await eventApi.updateForm(eventId, form.id, apiFormData);
     } else {
-      response = await eventApi.createForm(eventId, apiFormData);
+      const eventResponse = await createEvent(shareBannerFile, shareEventData);
+      console.log('Created event:', eventResponse);
+      
+      response = await eventApi.createForm(eventResponse.id, apiFormData);
     }
 
     onFormSaved(response.data);
