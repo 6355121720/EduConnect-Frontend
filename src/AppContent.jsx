@@ -6,6 +6,7 @@ import { login } from "./store/slices/authSlice";
 import AppRouter from "./routes/routes";
 import { fetchConnections } from "./services/connectionService";
 import socketService from "./services/socketService";
+import { fetchNotifications } from "./store/slices/notificationsSlice";
 
 const AppContent = () => {
   const dispatch = useDispatch();
@@ -17,7 +18,8 @@ const AppContent = () => {
       try {
         const res = await autoLogin();
         if (res.status === 200){
-          await dispatch(fetchConnections());          
+          await dispatch(fetchConnections());  
+          await dispatch(fetchNotifications()); 
           socketService.connect();
           dispatch(login(res.data.user));
         }
