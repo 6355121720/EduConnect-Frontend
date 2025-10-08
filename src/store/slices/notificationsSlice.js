@@ -8,6 +8,8 @@ export const fetchNotifications = createAsyncThunk(
   async ({ page = 0, size = 50 } = {}, { rejectWithValue }) => {
     try {
       const res = await apiClient.get('/notifications', { params: { page, size } });
+      console.log("notifications : ");
+      console.log(res.data);
       return res.data;
     } catch (err) {
       return rejectWithValue(err.response?.data || { message: err.message });
