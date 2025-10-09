@@ -201,6 +201,10 @@ const eventApi = {
     return apiClient.get(`${BASE_URL}/${eventId}/forms/${formId}/registration`);
   },
 
+  getFormResponses: async (eventId, formId) => {
+    return apiClient.get(`${BASE_URL}/${eventId}/forms/${formId}/get-answers`);
+  },
+
   // Enhanced Registration endpoints for form-based registration
   registerForEventWithForm: async (eventId, formId, responses) => {
     return apiClient.post(`${BASE_URL}/${eventId}/forms/${formId}/submit`, { responses });
