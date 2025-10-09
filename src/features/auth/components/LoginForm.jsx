@@ -75,7 +75,7 @@ const LoginForm = () => {
     <form onSubmit={handleSubmit} className="space-y-6">
       <fieldset disabled={loading} className="space-y-6">
         <div className="space-y-4">
-          <div className="relative">
+          <div className="relative m-2 border-2 rounded-xl border-white p-2">
             <input
               type="text"
               name="emailOrUsername"
@@ -86,7 +86,7 @@ const LoginForm = () => {
             />
           </div>
           
-          <div className="relative">
+          <div className="relative m-2 border-2 rounded-xl border-white p-2">
             <input
               type="password"
               name="password"
@@ -100,7 +100,7 @@ const LoginForm = () => {
 
         <button
           type="submit"
-          className="btn-premium w-full py-4 text-lg font-semibold"
+          className="btn-premium w-full py-4 text-lg font-semibold border-amber-400 border-4 rounded-3xl"
           disabled={loading}
         >
           {loading ? (

@@ -12,6 +12,9 @@ const notificationsApi = {
   markAllSeen: async () => {
     return apiClient.post(`${BASE}/mark-all-seen`);
   },
+  markSeen: async (nid) => {
+    return apiClient.post(`${BASE}/mark-seen`, {nid});
+  }
 };
 
 export default notificationsApi;

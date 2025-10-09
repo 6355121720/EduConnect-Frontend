@@ -354,7 +354,7 @@ const PrivateHome = () => {
           </div>
 
           {/* Quick Stats */}
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-12">
+          <div className="grid grid-cols-2 lg:grid-cols-3 gap-4 mb-12">
             {quickStats.map((stat, index) => (
               <Link
                 key={index}
@@ -413,9 +413,9 @@ const PrivateHome = () => {
           <div className="bg-gray-800/20 backdrop-blur-sm rounded-2xl p-6 border border-gray-700">
             <div className="flex items-center justify-between mb-6">
               <h2 className="text-xl font-bold text-white">Recent Activity</h2>
-              <Link to="/activity" className="text-blue-400 hover:text-blue-300 text-sm font-medium">
+              {/* <Link to="/activity" className="text-blue-400 hover:text-blue-300 text-sm font-medium">
                 View all
-              </Link>
+              </Link> */}
             </div>
             
             <div className="space-y-3">

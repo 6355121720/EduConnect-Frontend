@@ -1,11 +1,11 @@
 import React from 'react';
 import { formatRelativeTimeIST, formatAbsoluteIST } from '../../../utils/timeI18n';
 import { useDispatch } from 'react-redux';
-import { markRead, removeNotification } from '../../../store/slices/notificationsSlice';
+import { markSeen, removeNotification } from '../../../store/slices/notificationsSlice';
 
 const NotificationCard = ({ n }) => {
   const dispatch = useDispatch();
-  const onMarkRead = () => dispatch(markRead(n.id));
+  const onMarkRead = () => dispatch(markSeen(n.id));
   const onRemove = () => dispatch(removeNotification(n.id));
 
   const iconForType = (type) => {
@@ -20,7 +20,7 @@ const NotificationCard = ({ n }) => {
       role="article"
       aria-labelledby={`nt-${n.id}`}
       tabIndex="0"
-      className={`group flex gap-4 items-start p-3 rounded-lg transition-colors ${n.read ? 'bg-gray-800' : 'bg-gray-700 ring-2 ring-indigo-500/20'}`}
+      className={`group flex gap-4 items-start p-3 rounded-lg transition-colors ${n.seen ? 'bg-gray-800' : 'bg-gray-700 ring-2 ring-indigo-500/20'}`}
     >
       <div>{iconForType(n.type)}</div>
       <div className="flex-1 min-w-0">
@@ -35,8 +35,8 @@ const NotificationCard = ({ n }) => {
             </div>
           </div>
           <div className="flex-shrink-0 ml-2 flex flex-col gap-2 items-end">
-            <button onClick={onMarkRead} className="text-xs px-2 py-1 bg-gray-600 text-gray-200 rounded hover:bg-gray-500 focus:outline-none">Mark read</button>
-            <button onClick={onRemove} className="text-xs px-2 py-1 bg-rose-600 text-white rounded hover:bg-rose-500 focus:outline-none">Dismiss</button>
+            <button onClick={onMarkRead} className= {`text-xs px-2 py-1 bg-gray-600 text-gray-200 rounded hover:bg-gray-500 focus:outline-none ${n.seen ? 'cursor-not-allowed bg-gray-700' : ''} ` }>Mark read</button>
+            {/* <button onClick={onRemove} className="text-xs px-2 py-1 bg-rose-600 text-white rounded hover:bg-rose-500 focus:outline-none">Dismiss</button> */}
           </div>
         </div>
       </div>

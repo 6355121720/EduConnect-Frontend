@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import NotificationCard from './NotificationCard';
-import { fetchNotifications, markAllRead } from '../../../store/slices/notificationsSlice';
+import { fetchNotifications, markAllRead, markAllSeen } from '../../../store/slices/notificationsSlice';
 
 const tabs = [
   { id: 'all', label: 'All' },
@@ -12,9 +12,9 @@ const tabs = [
 
 const filterByTab = (n, tab) => {
   if (tab === 'all') return true;
-  if (tab === 'events') return n.type.startsWith('EVENT');
-  if (tab === 'chat') return n.type.startsWith('CHAT');
-  if (tab === 'requests') return n.type.startsWith('FRIEND');
+  if (tab === 'events') return n.type.startsWith('NEW_EVENT');
+  if (tab === 'chat') return n.type === 'NEW_MESSAGE' || n.type === 'NEW_GROUP_MESSAGE' || n.type === 'Request_Accepted';
+  if (tab === 'requests') return n.type === 'CONNECTION_REQUEST';
   return true;
 };
 
@@ -34,7 +34,7 @@ const NotificationDrawer = ({ open, onClose }) => {
       <div className="p-4 border-b border-gray-800 flex items-center justify-between">
         <h2 className="text-lg font-semibold text-white">Notifications</h2>
         <div className="flex items-center gap-2">
-          <button onClick={() => dispatch(markAllRead())} className="text-sm text-gray-300 hover:text-white">Mark all read</button>
+          <button onClick={() => dispatch(markAllSeen())} className="text-sm text-gray-300 hover:text-white">Mark all read</button>
           <button onClick={onClose} aria-label="Close" className="p-2 rounded hover:bg-gray-800 focus:outline-none">
             ✕
           </button>
@@ -76,9 +76,9 @@ const NotificationDrawer = ({ open, onClose }) => {
           ))}
         </div>
 
-        <div className="mt-4 text-center">
+        {/* <div className="mt-4 text-center">
           <a href="/updates" className="text-sm text-indigo-400 hover:underline">View all updates</a>
-        </div>
+        </div> */}
       </div>
     </div>
   );
