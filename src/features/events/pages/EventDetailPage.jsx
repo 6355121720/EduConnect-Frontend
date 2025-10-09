@@ -1,15 +1,15 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
-import { 
-  Calendar, 
-  MapPin, 
-  Users, 
-  Clock, 
-  FileText, 
-  Edit, 
-  Trash2, 
-  Download, 
+import {
+  Calendar,
+  MapPin,
+  Users,
+  Clock,
+  FileText,
+  Edit,
+  Trash2,
+  Download,
   Settings,
   ArrowLeft,
   ExternalLink,
@@ -28,7 +28,8 @@ import {
   Ticket,
   BarChart3,
   Plus,
-  Sparkles
+  Sparkles,
+  Loader2
 } from 'lucide-react';
 
 import { fetchEventById, clearSuccessMessage, fetchAvailableSpots } from '../../../store/slices/eventsSlice';
@@ -54,6 +55,7 @@ const EventDetailPage = () => {
   const [editingForm, setEditingForm] = useState(null);
   const [showSubmissionEditor, setShowSubmissionEditor] = useState(false);
   const [isLoadingSupplemental, setIsLoadingSupplemental] = useState(false);
+  const [downloadingFormId, setDownloadingFormId] = useState(null);
 
   useEffect(() => {
     if (eventId) {
@@ -147,6 +149,96 @@ const EventDetailPage = () => {
     } catch (error) {
       console.error('Error deleting form:', error);
       alert('Failed to delete form');
+    }
+  };
+
+  const handleDownloadFormResponses = async (form) => {
+    if (!form?.id) {
+      alert('Form identifier is missing. Please refresh and try again.');
+      return;
+    }
+
+    try {
+      setDownloadingFormId(form.id);
+      const response = await eventApi.getFormResponses(eventId, form.id);
+      const submissions = Array.isArray(response?.data) ? response.data : [];
+
+      if (!submissions.length) {
+        alert('No responses are available for this form yet.');
+        return;
+      }
+
+      const baseColumns = ['registrationId', 'username', 'eventId', 'formId', 'userId', 'status', 'submittedAt', 'updatedAt'];
+      const dynamicLabels = [];
+      const labelSet = new Set();
+
+      submissions.forEach((submission) => {
+        (submission.responses || []).forEach((answer) => {
+          const rawLabel = answer?.fieldLabel?.trim() || `Field ${answer?.fieldId ?? ''}`.trim();
+          const label = rawLabel || `Field ${answer?.fieldId ?? dynamicLabels.length + 1}`;
+
+          if (!labelSet.has(label)) {
+            labelSet.add(label);
+            dynamicLabels.push(label);
+          }
+        });
+      });
+
+      const escapeCSV = (value) => {
+        if (value === null || value === undefined) return '""';
+        const stringValue = String(value).replace(/"/g, '""');
+        return `"${stringValue}`.concat('"');
+      };
+
+      const rows = submissions.map((submission) => {
+        const responseMap = {};
+        (submission.responses || []).forEach((answer) => {
+          const label = (answer?.fieldLabel?.trim() || `Field ${answer?.fieldId ?? ''}`) || 'Field';
+          if (responseMap[label]) {
+            responseMap[label] = `${responseMap[label]}; ${answer?.value ?? ''}`;
+          } else {
+            responseMap[label] = answer?.value ?? '';
+          }
+        });
+
+        const baseData = [
+          submission.registrationId ?? '',
+          submission.username ?? '',
+          submission.eventId ?? '',
+          submission.formId ?? '',
+          submission.userId ?? '',
+          submission.status ?? '',
+          submission.submittedAt ? new Date(submission.submittedAt).toISOString() : '',
+          submission.updatedAt ? new Date(submission.updatedAt).toISOString() : ''
+        ];
+
+        const dynamicData = dynamicLabels.map((label) => responseMap[label] ?? '');
+
+        return [...baseData, ...dynamicData].map(escapeCSV).join(',');
+      });
+
+      const headerRow = [...baseColumns, ...dynamicLabels].map(escapeCSV).join(',');
+      const csvContent = [headerRow, ...rows].join('\r\n');
+
+      const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
+      const rawTitle = form.title || `form-${form.id}`;
+      const sanitizedTitle = rawTitle.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '') || `form-${form.id}`;
+      const filename = `event-${eventId}-form-${sanitizedTitle}-${timestamp}.csv`;
+
+      const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.setAttribute('download', filename);
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(url);
+    } catch (err) {
+      console.error('Failed to download form responses:', err);
+      alert('Unable to download responses right now. Please try again later.');
+    } finally {
+      setDownloadingFormId(null);
     }
   };
 
@@ -565,6 +657,27 @@ const EventDetailPage = () => {
                             </span>
                           </div>
                           <div className="flex items-center gap-2">
+                            <button
+                              onClick={() => handleDownloadFormResponses(form)}
+                              disabled={downloadingFormId === form.id}
+                              className={`px-3 py-1 rounded-lg transition-all border text-sm flex items-center ${
+                                downloadingFormId === form.id
+                                  ? 'bg-purple-600/10 border-purple-500/20 text-purple-200 cursor-wait'
+                                  : 'bg-purple-600/20 hover:bg-purple-600/30 border-purple-500/30 text-purple-300'
+                              }`}
+                            >
+                              {downloadingFormId === form.id ? (
+                                <>
+                                  <Loader2 className="w-3 h-3 inline mr-2 animate-spin" />
+                                  Preparing...
+                                </>
+                              ) : (
+                                <>
+                                  <Download className="w-3 h-3 inline mr-2" />
+                                  Download Responses
+                                </>
+                              )}
+                            </button>
                             <button
                               onClick={() => handleEditForm(form)}
                               className="px-3 py-1 bg-blue-600/20 hover:bg-blue-600/30 text-blue-300 rounded-lg transition-all border border-blue-500/30 text-sm"
