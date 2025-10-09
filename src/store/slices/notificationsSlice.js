@@ -35,12 +35,26 @@ export const markAllSeen = createAsyncThunk(
   async (_, { rejectWithValue }) => {
     try {
       const res = await notificationsApi.markAllSeen();
+      console.log("notification all seen ");
+      console.log(res);
       return res.data;
     } catch (err) {
       return rejectWithValue(err.response?.data || { message: err.message });
     }
   }
 );
+
+export const markSeen = createAsyncThunk(
+  'notifications/markSeen',
+  async (nid, {rejectWithValue}) => {
+    try{
+      const res = await notificationsApi.markSeen(nid);
+      return res.data;
+    } catch (err) {
+      return rejectWithValue(err.response?.data || {message : err.message});
+    }
+  }
+)
 
 const initialState = {
   byId: {},
@@ -60,23 +74,23 @@ const notificationsSlice = createSlice({
         state.byId[n.id] = { ...(state.byId[n.id] || {}), ...n };
         state.order = [n.id, ...state.order.filter((id) => id !== n.id)];
       });
-      state.unreadCount = Object.values(state.byId).filter((x) => !x.read).length;
+      state.unreadCount = Object.values(state.byId).filter((x) => !x.seen).length;
     },
     addNotification(state, action) {
       const n = action.payload;
       state.byId[n.id] = { ...(state.byId[n.id] || {}), ...n };
       state.order = [n.id, ...state.order.filter((id) => id !== n.id)];
-      state.unreadCount = Object.values(state.byId).filter((x) => !x.read).length;
+      state.unreadCount = Object.values(state.byId).filter((x) => !x.seen).length;
     },
     markRead(state, action) {
       const id = action.payload;
-      if (state.byId[id] && !state.byId[id].read) {
-        state.byId[id].read = true;
+      if (state.byId[id] && !state.byId[id].seen) {
+        state.byId[id].seen = true;
         state.unreadCount = Math.max(0, state.unreadCount - 1);
       }
     },
     markAllRead(state) {
-      Object.values(state.byId).forEach((n) => (n.read = true));
+      Object.values(state.byId).forEach((n) => (n.seen = true));
       state.unreadCount = 0;
     },
     removeNotification(state, action) {
@@ -111,7 +125,9 @@ const notificationsSlice = createSlice({
         
         // Keep newest-first order
         s.order = Array.from(new Set(s.order));
-        s.unreadCount = Object.values(s.byId).filter((x) => !x.read).length;
+        console.log('fetch notifications')
+        console.log(Object.values(s.byId))
+        s.unreadCount = Object.values(s.byId).filter((x) => !x.seen).length;
       })
       .addCase(fetchNotifications.rejected, (s) => { s.status = 'error'; })
 
@@ -124,7 +140,14 @@ const notificationsSlice = createSlice({
       .addCase(markAllSeen.fulfilled, (s) => {
         s.unreadCount = 0;
       })
-      .addCase(markAllSeen.rejected, (s) => { /* ignore */ });
+      .addCase(markAllSeen.rejected, (s) => { /* ignore */ })
+      .addCase(markSeen.fulfilled, (s, {payload}) => {
+        let nid = payload.id;
+        if (s.byId[nid] && !s.byId[nid].seen){
+          s.byId[nid].seen = true;
+          s.unreadCount -= 1;
+        }
+      });
   },
 });
 
