@@ -57,7 +57,8 @@ const FormBuilder = ({ eventId, form, onFormSaved, onClose ,shareEventData , sha
   const addField = (fieldType) => {
     const newField = {
       id: null, // null for new fields (backend will assign ID)
-      label: '',
+      tempId: `temp-${Date.now()}-${Math.random()}`, // unique temporary ID for new fields
+      label: '', 
       type: fieldType.id,
       required: false,
       orderIndex: formData.fields.length + 1,
@@ -83,22 +84,27 @@ const FormBuilder = ({ eventId, form, onFormSaved, onClose ,shareEventData , sha
   const saveField = (updatedField) => {
     setFormData(prev => ({
       ...prev,
-      fields: prev.fields.map(field => 
-        field.id === updatedField.id || 
-        (field.id === null && updatedField.id === null && field.type === updatedField.type) 
-          ? updatedField 
-          : field
-      )
+      fields: prev.fields.map(field => {
+        // Match by ID for existing fields, or by tempId for new fields
+        if (field.id && updatedField.id && field.id === updatedField.id) {
+          return updatedField;
+        }
+        if (field.tempId && updatedField.tempId && field.tempId === updatedField.tempId) {
+          return updatedField;
+        }
+        return field;
+      })
     }));
     setShowFieldEditor(false);
     setEditingField(null);
   };
 
-  const deleteField = (fieldId) => {
+  const deleteField = (fieldIdentifier) => {
     setFormData(prev => ({
       ...prev,
-      fields: prev.fields.filter(field => field.id !== fieldId)
-        .map((field, index) => ({ ...field, orderIndex: index + 1 }))
+      fields: prev.fields.filter(field => 
+        field.id !== fieldIdentifier && field.tempId !== fieldIdentifier
+      ).map((field, index) => ({ ...field, orderIndex: index + 1 }))
     }));
   };
 
@@ -122,7 +128,10 @@ const FormBuilder = ({ eventId, form, onFormSaved, onClose ,shareEventData , sha
     
     if (!draggedField) return;
     
-    const draggedIndex = formData.fields.findIndex(field => field.id === draggedField.id);
+    const draggedIndex = formData.fields.findIndex(field => 
+      (field.id && draggedField.id && field.id === draggedField.id) ||
+      (field.tempId && draggedField.tempId && field.tempId === draggedField.tempId)
+    );
     if (draggedIndex === dropIndex) return;
     
     const newFields = [...formData.fields];
@@ -421,7 +430,7 @@ const FormBuilder = ({ eventId, form, onFormSaved, onClose ,shareEventData , sha
                     <div className="space-y-3">
                       {formData.fields.map((field, index) => (
                         <div
-                          key={field.id || `temp-${index}`}
+                          key={field.id || field.tempId || `temp-${index}`}
                           draggable
                           onDragStart={(e) => handleDragStart(e, field)}
                           onDragOver={(e) => handleDragOver(e, index)}
@@ -431,7 +440,11 @@ const FormBuilder = ({ eventId, form, onFormSaved, onClose ,shareEventData , sha
                             dragOverIndex === index 
                               ? 'border-purple-500/50 bg-purple-500/10' 
                               : 'border-gray-500/30 hover:border-gray-400/50'
-                          } ${draggedField?.id === field.id ? 'opacity-50 scale-95' : 'hover:scale-[1.02]'}`}
+                          } ${
+                            (draggedField?.id && field.id && draggedField.id === field.id) ||
+                            (draggedField?.tempId && field.tempId && draggedField.tempId === field.tempId)
+                              ? 'opacity-50 scale-95' : 'hover:scale-[1.02]'
+                          }`}
                         >
                           <div className="flex items-center gap-4 flex-1">
                             <div className="flex items-center gap-3 text-gray-400 group-hover:text-purple-400 transition-colors">
@@ -472,7 +485,7 @@ const FormBuilder = ({ eventId, form, onFormSaved, onClose ,shareEventData , sha
                             </button>
                             <button
                               type="button"
-                              onClick={() => deleteField(field.id)}
+                              onClick={() => deleteField(field.id || field.tempId)}
                               className="p-2 text-gray-400 hover:text-red-400 hover:bg-red-500/10 rounded-lg transition-all"
                               title="Delete field"
                             >

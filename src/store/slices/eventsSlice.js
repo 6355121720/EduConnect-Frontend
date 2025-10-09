@@ -14,17 +14,17 @@ export const fetchEvents = createAsyncThunk(
         response = await eventApi.searchEvents(searchQuery, page, size);
       } else {
         switch (filterType) {
-          case 'All':
-            response = await eventApi.getAllEvents(page, size, sortBy, sortDirection);
+          case 'all':
+            response = await eventApi.getAllEvents();
             break;
           case 'past':
-            response = await eventApi.getPastEvents(page, size, sortBy, sortDirection);
+            response = await eventApi.getPastEvents();
             break;
           case 'popular':
-            response = await eventApi.getPopularEvents(page, size, sortBy, sortDirection);
+            response = await eventApi.getPopularEvents();
             break;
           case 'my-created':
-            response = await eventApi.getMyCreatedEvents(page, size, sortBy, sortDirection);
+            response = await eventApi.getMyCreatedEvents();
             break;
           default:
             response = await eventApi.getUpcomingEvents(page, size, sortBy, sortDirection);
@@ -157,13 +157,10 @@ export const fetchAvailableSpots = createAsyncThunk(
 );
 
 const initialState = {
-  // Events list
   events: [],
   totalPages: 0,
   totalElements: 0,
   currentPage: 0,
-  
-  // Current event details
   currentEvent: null,
   
   // User registrations
@@ -177,7 +174,7 @@ const initialState = {
   
   // Search and filters
   searchQuery: '',
-  filterType: 'upcoming', // 'All', 'past', 'popular', 'my-created'
+  filterType: 'upcoming', 
   sortBy: 'startDate',
   sortDirection: 'desc',
   

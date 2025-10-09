@@ -3,10 +3,8 @@ import axios from 'axios';
 const BASE_URL = '/events';
 
 const eventApi = {
-  getAllEvents: async (page = 0, size = 20, sortBy = 'date', sortDirection = 'desc') => {
-  return apiClient.get(`${BASE_URL}/`, {
-    params: { page, size, sortBy, sortDirection }
-  });
+  getAllEvents: async () => {
+  return apiClient.get(`${BASE_URL}/`);
 },
 
 
@@ -24,22 +22,20 @@ const eventApi = {
     });
   },
 
-  getPastEvents: async (page = 0, size = 20, sortBy = 'date', sortDirection = 'desc') => {
-    return apiClient.get(`${BASE_URL}/past`, {
-      params: { page, size, sortBy, sortDirection }
-    });
+  getPastEvents: async () => {
+    return apiClient.get(`${BASE_URL}/past`);
   },
 
   getEventsByDateRange: async (startDate, endDate) => {
     return apiClient.get(`${BASE_URL}/dateRange`, { params: { startDate, endDate} });
   },
 
-  getPopularEvents: async (page = 0, size = 20, sortBy = 'date', sortDirection = 'desc') => {
-    return apiClient.get(`${BASE_URL}/popular`, { params: { page, size, sortBy, sortDirection } });
+  getPopularEvents: async () => {
+    return apiClient.get(`${BASE_URL}/popular`);
   },
 
-  getMyCreatedEvents: async (page = 0, size = 20, sortBy = 'date', sortDirection = 'desc') => {
-    return apiClient.get(`${BASE_URL}/my-created`, { params: { page, size, sortBy, sortDirection } });
+  getMyCreatedEvents: async () => {
+    return apiClient.get(`${BASE_URL}/my-created`);
   },
 
   createEvent: async (eventData, bannerFile) => {
