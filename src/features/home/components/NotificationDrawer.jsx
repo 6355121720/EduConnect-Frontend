@@ -23,10 +23,6 @@ const NotificationDrawer = ({ open, onClose }) => {
   const { byId, order, status } = useSelector((s) => s.notifications);
   const [activeTab, setActiveTab] = useState('all');
 
-  useEffect(() => {
-    if (open && status === 'idle') dispatch(fetchNotifications());
-  }, [open]);
-
   const items = order.map((id) => byId[id]).filter(Boolean).filter((n) => filterByTab(n, activeTab));
 
   return (
