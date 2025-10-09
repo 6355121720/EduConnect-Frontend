@@ -635,7 +635,7 @@ const EventDetailPage = () => {
             )}
 
             {/* Creator Analytics */}
-            {isCreator && (
+            {/* {isCreator && (
               <div className="bg-gray-800/50 backdrop-blur-sm rounded-2xl p-8 border border-gray-700/30">
                 <h2 className="text-2xl font-bold text-white mb-6 flex items-center gap-3">
                   <BarChart3 className="w-6 h-6 text-green-400" />
@@ -662,7 +662,7 @@ const EventDetailPage = () => {
                   </div>
                 </div>
               </div>
-            )}
+            )} */}
           </div>
 
           {/* Sidebar */}

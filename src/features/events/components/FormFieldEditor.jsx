@@ -3,9 +3,12 @@ import { X, Save, ChevronDown, HelpCircle } from 'lucide-react';
 
 const FormFieldEditor = ({ field, onSave, onClose }) => {
   const [fieldData, setFieldData] = useState({
+    id: null,
+    tempId: null,
     label: '',
     type: 'TEXT',
     required: false,
+    orderIndex: 0,
     placeholder: '',
     helpText: '',
     options: null
@@ -17,7 +20,8 @@ const FormFieldEditor = ({ field, onSave, onClose }) => {
   useEffect(() => {
     if (field) {
       const fieldDataCopy = {
-        id: field.id,
+        id: field.id ?? null,
+        tempId: field.tempId ?? null,
         label: field.label || '',
         type: field.type || 'TEXT',
         required: field.required || false,
